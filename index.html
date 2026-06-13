@@ -8,7 +8,7 @@
   <link rel="apple-touch-icon" href="ikonka_leader.jpg">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Рейтинг ИБМ">
+  <meta name="apple-mobile-web-app-title" content="Рейтинг марафона">
   <meta name="theme-color" content="#FF769A">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -155,7 +155,7 @@
     <div class="flex-buttons">
       <button class="btn" id="refreshBtn">🔄 Обновить рейтинг</button>
       <button class="btn" id="clearDataBtn">🗑 Очистить все данные</button>
-      <button class="btn btn-outline" id="exportRatingBtn">📎 Выгрузить общий рейтинг (Excel)</button>
+      <button class="btn btn-outline" id="exportRatingBtn">📎 Выгрузить общий рейтинг (Excel таблица)</button>
     </div>
     <div class="log-area" id="logArea">
       📌 Лог загрузки: готов к приёму файлов
@@ -297,7 +297,7 @@
       let cls = idx === 0 ? 'rank-1' : (idx === 1 ? 'rank-2' : (idx === 2 ? 'rank-3' : ''));
       newbieHtml += `<tr class="${cls}"><td>${idx+1}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.consultant)}</td><td>${escapeHtml(p.tabTeam)}</td><td style="text-align:center;"><strong>${p.stars}</strong></td></tr>`;
     });
-    newbieHtml += `</tbody></table>`;
+    newbieHtml += `</tbody><tr>`;
     if (!newbieList.length) newbieHtml = '<div style="text-align:center; color:#999;">Нет отчётов новичков</div>';
     document.getElementById('newbieRating').innerHTML = newbieHtml;
     
@@ -316,54 +316,91 @@
   function clearData() { if (confirm('Удалить все данные?')) { participants = []; saveData(); renderRating(); addLog('🗑 Очищено'); } }
   function refreshRating() { renderRating(); addLog('🔄 Рейтинг обновлён'); }
 
-  // ========== НОВАЯ ВЫГРУЗКА — ТАБЛИЦА С ЯЧЕЙКАМИ ==========
-  function exportRating() {
+  // ========== НОВАЯ ВЫГРУЗКА — HTML ТАБЛИЦА ДЛЯ EXCEL ==========
+  function exportRatingToExcel() {
     const newbieList = participants.filter(p => p.role === 'Новичок').sort((a,b) => b.stars - a.stars);
     const proList = participants.filter(p => p.role === 'Опытный').sort((a,b) => b.stars - a.stars);
     
-    // Создаём строки для CSV (разделитель ;)
-    let rows = [];
+    // Создаём HTML-таблицу для Excel
+    let html = `<!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Рейтинг марафона</title>
+      <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 20px; }
+        h1 { color: #4D675C; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+        th { background-color: #FF769A; color: white; font-weight: bold; }
+        .stat-table th { background-color: #4D675C; }
+        .total-row { font-weight: bold; background-color: #FFF0F3; }
+      </style>
+    </head>
+    <body>
+      <h1>🏆 ОБЩИЙ РЕЙТИНГ МАРАФОНА</h1>
+      <p><strong>Дата выгрузки:</strong> ${new Date().toLocaleString()}</p>
+      
+      <h2>🍃 НОВИЧКИ</h2>
+      <table>
+        <thead>
+          <tr><th>№</th><th>Участник</th><th>Консультант</th><th>Tab Team</th><th>⭐ Звёзды</th></tr>
+        </thead>
+        <tbody>`;
     
-    // Заголовок
-    rows.push(['ОБЩИЙ РЕЙТИНГ МАРАФОНА', '']);
-    rows.push(['Дата выгрузки', new Date().toLocaleString()]);
-    rows.push([]);
+    if (newbieList.length === 0) {
+      html += `<tr><td colspan="5" style="text-align:center;">Нет данных</td></tr>`;
+    } else {
+      newbieList.forEach((p, idx) => {
+        html += `<tr><td>${idx + 1}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.consultant)}</td><td>${escapeHtml(p.tabTeam)}</td><td style="text-align:center;"><strong>${p.stars}</strong></td></tr>`;
+      });
+    }
     
-    // Таблица НОВИЧКИ
-    rows.push(['🍃 НОВИЧКИ']);
-    rows.push(['Место', 'Участник', 'Консультант', 'Tab Team', '⭐ Звёзды']);
-    newbieList.forEach((p, idx) => {
-      rows.push([idx + 1, p.name, p.consultant, p.tabTeam, p.stars]);
-    });
-    if (newbieList.length === 0) rows.push(['Нет данных', '', '', '', '']);
-    rows.push([]);
+    html += `</tbody>
+      </table>
+      
+      <h2>🔥 ОПЫТНЫЕ</h2>
+      <table>
+        <thead>
+          <tr><th>№</th><th>Участник</th><th>Консультант</th><th>Tab Team</th><th>⭐ Звёзды</th></tr>
+        </thead>
+        <tbody>`;
     
-    // Таблица ОПЫТНЫЕ
-    rows.push(['🔥 ОПЫТНЫЕ']);
-    rows.push(['Место', 'Участник', 'Консультант', 'Tab Team', '⭐ Звёзды']);
-    proList.forEach((p, idx) => {
-      rows.push([idx + 1, p.name, p.consultant, p.tabTeam, p.stars]);
-    });
-    if (proList.length === 0) rows.push(['Нет данных', '', '', '', '']);
-    rows.push([]);
+    if (proList.length === 0) {
+      html += `<tr><td colspan="5" style="text-align:center;">Нет данных</td></tr>`;
+    } else {
+      proList.forEach((p, idx) => {
+        html += `<tr><td>${idx + 1}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.consultant)}</td><td>${escapeHtml(p.tabTeam)}</td><td style="text-align:center;"><strong>${p.stars}</strong></td></tr>`;
+      });
+    }
     
-    // Итоговая статистика
-    rows.push(['📊 ИТОГОВАЯ СТАТИСТИКА']);
-    rows.push(['Всего участников', participants.length]);
-    rows.push(['Всего звёзд (новички)', newbieList.reduce((s,p) => s + p.stars, 0)]);
-    rows.push(['Всего звёзд (опытные)', proList.reduce((s,p) => s + p.stars, 0)]);
-    rows.push(['Общий рейтинг (сумма всех звёзд)', newbieList.reduce((s,p) => s + p.stars, 0) + proList.reduce((s,p) => s + p.stars, 0)]);
+    const totalNewbieStars = newbieList.reduce((s,p) => s + p.stars, 0);
+    const totalProStars = proList.reduce((s,p) => s + p.stars, 0);
     
-    // Преобразуем в CSV
-    const csvContent = rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';')).join('\n');
+    html += `</tbody>
+      </table>
+      
+      <h2>📊 ИТОГОВАЯ СТАТИСТИКА</h2>
+      <table class="stat-table">
+        <thead><tr><th>Показатель</th><th>Значение</th></tr></thead>
+        <tbody>
+          <tr><td>👥 Всего участников</td><td><strong>${participants.length}</strong></td></tr>
+          <tr><td>🍃 Всего звёзд (новички)</td><td><strong>${totalNewbieStars}</strong></td></tr>
+          <tr><td>🔥 Всего звёзд (опытные)</td><td><strong>${totalProStars}</strong></td></tr>
+          <tr class="total-row"><td>⭐ ОБЩИЙ РЕЙТИНГ (сумма всех звёзд)</td><td><strong>${totalNewbieStars + totalProStars}</strong></td></tr>
+        </tbody>
+      </table>
+    </body>
+    </html>`;
     
-    // Добавляем BOM для кириллицы
-    const blob = new Blob(["\uFEFF" + csvContent], {type: 'text/csv;charset=utf-8;'});
+    // Сохраняем как .xls файл
+    const blob = new Blob([html], {type: 'application/vnd.ms-excel'});
     const link = document.createElement('a');
-    link.download = `rating_${new Date().toISOString().slice(0,10)}.csv`;
+    link.download = `rating_${new Date().toISOString().slice(0,10)}.xls`;
     link.href = URL.createObjectURL(blob);
     link.click();
-    addLog('📎 Рейтинг выгружен в Excel (таблица с ячейками)');
+    URL.revokeObjectURL(link.href);
+    addLog('📎 Рейтинг выгружен в Excel (таблица с границами)');
   }
 
   const uploadArea = document.getElementById('uploadArea');
@@ -375,7 +412,7 @@
   fileInput.addEventListener('change', async (e) => { if (e.target.files.length) await processFiles(Array.from(e.target.files)); fileInput.value = ''; });
   document.getElementById('refreshBtn').addEventListener('click', refreshRating);
   document.getElementById('clearDataBtn').addEventListener('click', clearData);
-  document.getElementById('exportRatingBtn').addEventListener('click', exportRating);
+  document.getElementById('exportRatingBtn').addEventListener('click', exportRatingToExcel);
   loadData();
 </script>
 </body>
