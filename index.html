@@ -189,11 +189,8 @@
     const logArea = document.getElementById('logArea');
     const time = new Date().toLocaleTimeString();
     logArea.innerHTML = `📌 [${time}] ${msg}<br>${logArea.innerHTML}`;
-    // Ограничим историю 30 строками
     const lines = logArea.innerHTML.split('<br>');
-    if (lines.length > 30) {
-      logArea.innerHTML = lines.slice(0, 30).join('<br>');
-    }
+    if (lines.length > 30) logArea.innerHTML = lines.slice(0, 30).join('<br>');
   }
 
   function loadData() {
@@ -201,7 +198,7 @@
     if (saved) {
       try {
         participants = JSON.parse(saved);
-        addLog(`Загружено ${participants.length} участников из сохранённых данных`);
+        addLog(`Загружено ${participants.length} участников`);
       } catch(e) { participants = []; }
     }
     renderRating();
@@ -209,69 +206,37 @@
 
   function saveData() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(participants));
-    addLog(`💾 Данные сохранены (${participants.length} участников)`);
   }
 
-  // УНИВЕРСАЛЬНЫЙ парсинг CSV
   function parseCSV(text, fileName) {
-    addLog(`📄 Обработка файла: ${fileName}`);
+    addLog(`📄 Обработка: ${fileName}`);
     const lines = text.split(/\r?\n/);
-    
     let participant = {
-      name: "",
-      status: "",
-      role: "",
-      consultant: "",
-      tabTeam: "",
-      stars: 0,
-      fileName: fileName
+      name: "", status: "", role: "", consultant: "", tabTeam: "", stars: 0, fileName: fileName
     };
     
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
+    for (let line of lines) {
       const lowerLine = line.toLowerCase();
-      
-      // Ищем ФИО
-      if ((lowerLine.includes('фио') || lowerLine.includes('ф.и.о') || lowerLine.includes('имя')) && !participant.name) {
+      if ((lowerLine.includes('фио') || lowerLine.includes('имя')) && !participant.name) {
         const parts = line.split(';');
-        if (parts[1] && parts[1].replace(/"/g, '').trim().length > 2) {
-          participant.name = parts[1].replace(/"/g, '').trim();
-          addLog(`  → Имя: ${participant.name}`);
-        }
+        if (parts[1]) participant.name = parts[1].replace(/"/g, '').trim();
+        if (participant.name && participant.name.length > 2) addLog(`  → Имя: ${participant.name}`);
       }
-      
-      // Ищем роль
       if ((lowerLine.includes('роль') || lowerLine.includes('новичок') || lowerLine.includes('опытный')) && !participant.role) {
-        if (lowerLine.includes('новичок')) {
-          participant.role = 'Новичок';
-          addLog(`  → Роль: Новичок`);
-        } else if (lowerLine.includes('опытный')) {
-          participant.role = 'Опытный';
-          addLog(`  → Роль: Опытный`);
-        } else {
-          const parts = line.split(';');
-          for (let p of parts) {
-            if (p.includes('Новичок')) participant.role = 'Новичок';
-            if (p.includes('Опытный')) participant.role = 'Опытный';
-          }
-        }
+        if (lowerLine.includes('новичок')) participant.role = 'Новичок';
+        else if (lowerLine.includes('опытный')) participant.role = 'Опытный';
+        if (participant.role) addLog(`  → Роль: ${participant.role}`);
       }
-      
-      // Ищем консультанта
       if ((lowerLine.includes('консультант') || lowerLine.includes('куратор')) && !participant.consultant) {
         const parts = line.split(';');
         if (parts[1]) participant.consultant = parts[1].replace(/"/g, '').trim();
-        if (participant.consultant && participant.consultant.length > 0) addLog(`  → Консультант: ${participant.consultant}`);
+        if (participant.consultant) addLog(`  → Консультант: ${participant.consultant}`);
       }
-      
-      // Ищем Tab Team
       if ((lowerLine.includes('tab team') || lowerLine.includes('вышестоящий')) && !participant.tabTeam) {
         const parts = line.split(';');
         if (parts[1]) participant.tabTeam = parts[1].replace(/"/g, '').trim();
-        if (participant.tabTeam && participant.tabTeam.length > 0) addLog(`  → Tab Team: ${participant.tabTeam}`);
+        if (participant.tabTeam) addLog(`  → Tab Team: ${participant.tabTeam}`);
       }
-      
-      // Ищем звёзды
       if ((lowerLine.includes('звёзд') || lowerLine.includes('звезд') || lowerLine.includes('всего')) && participant.stars === 0) {
         const parts = line.split(';');
         for (let j = 0; j < parts.length; j++) {
@@ -286,187 +251,131 @@
       }
     }
     
-    // Если не нашли роль, определяем по тексту
     if (!participant.role) {
-      if (text.includes('Выложить макеты') || text.includes('Сфоткать продукт')) {
-        participant.role = 'Новичок';
-        addLog(`  → Роль определена автоматически: Новичок`);
-      } else if (text.includes('20 рассылок') || text.includes('Изучить бизнес')) {
-        participant.role = 'Опытный';
-        addLog(`  → Роль определена автоматически: Опытный`);
-      }
+      if (text.includes('Выложить макеты')) participant.role = 'Новичок';
+      else if (text.includes('20 рассылок')) participant.role = 'Опытный';
     }
     
     if (participant.name && participant.stars > 0) {
-      addLog(`✅ Успешно: ${participant.name} (${participant.role}) — ${participant.stars}⭐`);
+      addLog(`✅ ${participant.name} (${participant.role}) — ${participant.stars}⭐`);
       return participant;
-    } else {
-      addLog(`⚠️ Не удалось распознать файл: ${fileName}`);
-      return null;
     }
+    addLog(`⚠️ Не распознан: ${fileName}`);
+    return null;
   }
 
   async function processFiles(files) {
-    addLog(`📂 Загружено файлов: ${files.length}`);
-    let addedCount = 0;
-    
+    addLog(`📂 Файлов: ${files.length}`);
     for (const file of files) {
-      if (file.name.endsWith('.csv') || file.type === 'text/csv') {
+      if (file.name.endsWith('.csv')) {
         const text = await file.text();
-        const participant = parseCSV(text, file.name);
-        if (participant && participant.name) {
-          const existingIndex = participants.findIndex(p => p.name === participant.name);
-          if (existingIndex !== -1) {
-            participants[existingIndex] = participant;
-            addLog(`🔄 Обновлён: ${participant.name}`);
-          } else {
-            participants.push(participant);
-            addedCount++;
-            addLog(`➕ Добавлен: ${participant.name}`);
-          }
+        const p = parseCSV(text, file.name);
+        if (p && p.name) {
+          const idx = participants.findIndex(p2 => p2.name === p.name);
+          if (idx !== -1) participants[idx] = p;
+          else participants.push(p);
         }
       } else {
-        addLog(`❌ Файл ${file.name} не CSV`);
+        addLog(`❌ Не CSV: ${file.name}`);
       }
     }
-    
     saveData();
     renderRating();
-    addLog(`📊 Итого участников: ${participants.length}`);
+    addLog(`📊 Участников: ${participants.length}`);
   }
 
   function renderRating() {
-    const newbieList = participants.filter(p => p.role === 'Новичок');
-    const proList = participants.filter(p => p.role === 'Опытный');
-    
-    newbieList.sort((a, b) => b.stars - a.stars);
-    proList.sort((a, b) => b.stars - a.stars);
+    const newbieList = participants.filter(p => p.role === 'Новичок').sort((a,b) => b.stars - a.stars);
+    const proList = participants.filter(p => p.role === 'Опытный').sort((a,b) => b.stars - a.stars);
     
     document.getElementById('totalParticipants').innerText = participants.length;
-    document.getElementById('totalNewbieStars').innerText = newbieList.reduce((sum, p) => sum + p.stars, 0);
-    document.getElementById('totalProStars').innerText = proList.reduce((sum, p) => sum + p.stars, 0);
+    document.getElementById('totalNewbieStars').innerText = newbieList.reduce((s,p) => s + p.stars, 0);
+    document.getElementById('totalProStars').innerText = proList.reduce((s,p) => s + p.stars, 0);
     
-    // Таблица новичков
     let newbieHtml = `<table class="rating-table"><thead><tr><th>#</th><th>Участник</th><th>Консультант</th><th>Tab Team</th><th>⭐ Звёзды</th></tr></thead><tbody>`;
     newbieList.forEach((p, idx) => {
-      let rankClass = '';
-      if (idx === 0) rankClass = 'rank-1';
-      else if (idx === 1) rankClass = 'rank-2';
-      else if (idx === 2) rankClass = 'rank-3';
-      newbieHtml += `<tr class="${rankClass}"><td>${idx + 1}</td><td style="word-break:break-word;">${escapeHtml(p.name)}</td><td style="word-break:break-word;">${escapeHtml(p.consultant)}</td><td style="word-break:break-word;">${escapeHtml(p.tabTeam)}</td><td style="text-align:center;"><strong>${p.stars}</strong></td></tr>`;
+      let cls = idx === 0 ? 'rank-1' : (idx === 1 ? 'rank-2' : (idx === 2 ? 'rank-3' : ''));
+      newbieHtml += `<tr class="${cls}"><td>${idx+1}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.consultant)}</td><td>${escapeHtml(p.tabTeam)}</td><td style="text-align:center;"><strong>${p.stars}</strong></td></tr>`;
     });
     newbieHtml += `</tbody></table>`;
-    if (newbieList.length === 0) newbieHtml = '<div style="text-align:center; color:#999;">Нет загруженных отчётов новичков</div>';
+    if (!newbieList.length) newbieHtml = '<div style="text-align:center; color:#999;">Нет отчётов новичков</div>';
     document.getElementById('newbieRating').innerHTML = newbieHtml;
     
-    // Таблица опытных
     let proHtml = `<table class="rating-table"><thead><tr><th>#</th><th>Участник</th><th>Консультант</th><th>Tab Team</th><th>⭐ Звёзды</th></tr></thead><tbody>`;
     proList.forEach((p, idx) => {
-      let rankClass = '';
-      if (idx === 0) rankClass = 'rank-1';
-      else if (idx === 1) rankClass = 'rank-2';
-      else if (idx === 2) rankClass = 'rank-3';
-      proHtml += `<tr class="${rankClass}"><td>${idx + 1}</td><td style="word-break:break-word;">${escapeHtml(p.name)}</td><td style="word-break:break-word;">${escapeHtml(p.consultant)}</td><td style="word-break:break-word;">${escapeHtml(p.tabTeam)}</td><td style="text-align:center;"><strong>${p.stars}</strong></td></tr>`;
+      let cls = idx === 0 ? 'rank-1' : (idx === 1 ? 'rank-2' : (idx === 2 ? 'rank-3' : ''));
+      proHtml += `<tr class="${cls}"><td>${idx+1}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.consultant)}</td><td>${escapeHtml(p.tabTeam)}</td><td style="text-align:center;"><strong>${p.stars}</strong></td></tr>`;
     });
     proHtml += `</tbody></table>`;
-    if (proList.length === 0) proHtml = '<div style="text-align:center; color:#999;">Нет загруженных отчётов опытных участников</div>';
+    if (!proList.length) proHtml = '<div style="text-align:center; color:#999;">Нет отчётов опытных</div>';
     document.getElementById('proRating').innerHTML = proHtml;
-    
-    addLog(`📊 Рейтинг обновлён: Новичков ${newbieList.length}, Опытных ${proList.length}`);
   }
 
-  function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-      if (m === '&') return '&amp;';
-      if (m === '<') return '&lt;';
-      if (m === '>') return '&gt;';
-      return m;
-    });
-  }
+  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
 
-  function clearData() {
-    if (confirm('Удалить все загруженные отчёты? Рейтинг обнулится.')) {
-      participants = [];
-      saveData();
-      renderRating();
-      addLog('🗑 Все данные очищены');
-    }
-  }
+  function clearData() { if (confirm('Удалить все данные?')) { participants = []; saveData(); renderRating(); addLog('🗑 Очищено'); } }
+  function refreshRating() { renderRating(); addLog('🔄 Рейтинг обновлён'); }
 
-  function refreshRating() {
-    renderRating();
-    addLog('🔄 Рейтинг принудительно обновлён');
-  }
-
+  // ========== НОВАЯ ВЫГРУЗКА — ТАБЛИЦА С ЯЧЕЙКАМИ ==========
   function exportRating() {
-    const newbieList = participants.filter(p => p.role === 'Новичок');
-    const proList = participants.filter(p => p.role === 'Опытный');
-    newbieList.sort((a, b) => b.stars - a.stars);
-    proList.sort((a, b) => b.stars - a.stars);
+    const newbieList = participants.filter(p => p.role === 'Новичок').sort((a,b) => b.stars - a.stars);
+    const proList = participants.filter(p => p.role === 'Опытный').sort((a,b) => b.stars - a.stars);
     
+    // Создаём строки для CSV (разделитель ;)
     let rows = [];
+    
+    // Заголовок
     rows.push(['ОБЩИЙ РЕЙТИНГ МАРАФОНА', '']);
     rows.push(['Дата выгрузки', new Date().toLocaleString()]);
     rows.push([]);
+    
+    // Таблица НОВИЧКИ
     rows.push(['🍃 НОВИЧКИ']);
     rows.push(['Место', 'Участник', 'Консультант', 'Tab Team', '⭐ Звёзды']);
     newbieList.forEach((p, idx) => {
       rows.push([idx + 1, p.name, p.consultant, p.tabTeam, p.stars]);
     });
+    if (newbieList.length === 0) rows.push(['Нет данных', '', '', '', '']);
     rows.push([]);
+    
+    // Таблица ОПЫТНЫЕ
     rows.push(['🔥 ОПЫТНЫЕ']);
     rows.push(['Место', 'Участник', 'Консультант', 'Tab Team', '⭐ Звёзды']);
     proList.forEach((p, idx) => {
       rows.push([idx + 1, p.name, p.consultant, p.tabTeam, p.stars]);
     });
+    if (proList.length === 0) rows.push(['Нет данных', '', '', '', '']);
     rows.push([]);
-    rows.push(['ИТОГО УЧАСТНИКОВ', participants.length]);
-    rows.push(['ВСЕГО ЗВЁЗД НОВИЧКИ', newbieList.reduce((s, p) => s + p.stars, 0)]);
-    rows.push(['ВСЕГО ЗВЁЗД ОПЫТНЫЕ', proList.reduce((s, p) => s + p.stars, 0)]);
     
-    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n');
-    const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv;charset=utf-8;'});
+    // Итоговая статистика
+    rows.push(['📊 ИТОГОВАЯ СТАТИСТИКА']);
+    rows.push(['Всего участников', participants.length]);
+    rows.push(['Всего звёзд (новички)', newbieList.reduce((s,p) => s + p.stars, 0)]);
+    rows.push(['Всего звёзд (опытные)', proList.reduce((s,p) => s + p.stars, 0)]);
+    rows.push(['Общий рейтинг (сумма всех звёзд)', newbieList.reduce((s,p) => s + p.stars, 0) + proList.reduce((s,p) => s + p.stars, 0)]);
+    
+    // Преобразуем в CSV
+    const csvContent = rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';')).join('\n');
+    
+    // Добавляем BOM для кириллицы
+    const blob = new Blob(["\uFEFF" + csvContent], {type: 'text/csv;charset=utf-8;'});
     const link = document.createElement('a');
     link.download = `rating_${new Date().toISOString().slice(0,10)}.csv`;
     link.href = URL.createObjectURL(blob);
     link.click();
-    addLog('📎 Рейтинг выгружен в Excel');
+    addLog('📎 Рейтинг выгружен в Excel (таблица с ячейками)');
   }
 
-  // ========== ИНИЦИАЛИЗАЦИЯ ==========
   const uploadArea = document.getElementById('uploadArea');
   const fileInput = document.getElementById('fileInput');
-  
   uploadArea.addEventListener('click', () => fileInput.click());
-  uploadArea.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    uploadArea.style.borderColor = '#4D675C';
-  });
-  uploadArea.addEventListener('dragleave', () => {
-    uploadArea.style.borderColor = '#FF769A';
-  });
-  uploadArea.addEventListener('drop', async (e) => {
-    e.preventDefault();
-    uploadArea.style.borderColor = '#FF769A';
-    const files = Array.from(e.dataTransfer.files);
-    await processFiles(files);
-  });
-  
-  fileInput.addEventListener('change', async (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 0) {
-      await processFiles(files);
-      fileInput.value = '';
-    } else {
-      addLog('⚠️ Файлы не выбраны');
-    }
-  });
-  
+  uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = '#4D675C'; });
+  uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = '#FF769A'; });
+  uploadArea.addEventListener('drop', async (e) => { e.preventDefault(); uploadArea.style.borderColor = '#FF769A'; await processFiles(Array.from(e.dataTransfer.files)); });
+  fileInput.addEventListener('change', async (e) => { if (e.target.files.length) await processFiles(Array.from(e.target.files)); fileInput.value = ''; });
   document.getElementById('refreshBtn').addEventListener('click', refreshRating);
   document.getElementById('clearDataBtn').addEventListener('click', clearData);
   document.getElementById('exportRatingBtn').addEventListener('click', exportRating);
-  
   loadData();
 </script>
 </body>
