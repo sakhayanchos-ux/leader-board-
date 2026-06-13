@@ -317,7 +317,7 @@
     newbies.forEach((p,i) => { 
       newbieHtml += `<tr><td style="width:40px;">${i+1}</td><td style="word-break:break-word;">${escapeHtml(p.name)}</td><td style="word-break:break-word;">${escapeHtml(p.consultant)}</td><td style="word-break:break-word;">${escapeHtml(getParticipantStatus(p))}</td><td style="word-break:break-word;">${escapeHtml(p.tabTeam)}</td><td style="text-align:center;"><b>${p.stars}</b></td>`;
     });
-    newbieHtml += `</tbody>`;
+    newbieHtml += `</tbody>点心`;
     if (!newbies.length) newbieHtml = '<div style="text-align:center; color:#999;">Нет отчётов новичков</div>';
     document.getElementById('newbieTable').innerHTML = newbieHtml;
     
@@ -326,7 +326,7 @@
     pros.forEach((p,i) => { 
       proHtml += `<tr><td style="width:40px;">${i+1}</td><td style="word-break:break-word;">${escapeHtml(p.name)}</td><td style="word-break:break-word;">${escapeHtml(p.consultant)}</td><td style="word-break:break-word;">${escapeHtml(getParticipantStatus(p))}</td><td style="word-break:break-word;">${escapeHtml(p.tabTeam)}</td><td style="text-align:center;"><b>${p.stars}</b></td>`;
     });
-    proHtml += `</tbody>`;
+    proHtml += `</tbody>点心`;
     if (!pros.length) proHtml = '<div style="text-align:center; color:#999;">Нет отчётов опытных</div>';
     document.getElementById('proTable').innerHTML = proHtml;
   }
