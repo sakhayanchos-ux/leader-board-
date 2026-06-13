@@ -130,6 +130,7 @@
       margin-top: 15px;
       max-height: 150px;
       overflow-y: auto;
+      font-family: monospace;
     }
     footer {
       text-align: center;
@@ -152,6 +153,7 @@
     </div>
     <input type="file" id="fileInput" multiple accept=".csv" style="display:none">
     <div class="flex-buttons">
+      <button class="btn" id="refreshBtn">🔄 Обновить рейтинг</button>
       <button class="btn" id="clearDataBtn">🗑 Очистить все данные</button>
       <button class="btn btn-outline" id="exportRatingBtn">📎 Выгрузить общий рейтинг (Excel)</button>
     </div>
@@ -180,15 +182,17 @@
 </div>
 
 <script>
-  const STORAGE_KEY = "leader_rating_v2";
+  const STORAGE_KEY = "leader_rating_v3";
   let participants = [];
 
   function addLog(msg) {
     const logArea = document.getElementById('logArea');
     const time = new Date().toLocaleTimeString();
     logArea.innerHTML = `📌 [${time}] ${msg}<br>${logArea.innerHTML}`;
-    if (logArea.children.length > 20) {
-      logArea.innerHTML = logArea.innerHTML.split('<br>').slice(0, 20).join('<br>');
+    // Ограничим историю 30 строками
+    const lines = logArea.innerHTML.split('<br>');
+    if (lines.length > 30) {
+      logArea.innerHTML = lines.slice(0, 30).join('<br>');
     }
   }
 
@@ -205,11 +209,12 @@
 
   function saveData() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(participants));
+    addLog(`💾 Данные сохранены (${participants.length} участников)`);
   }
 
-  // УНИВЕРСАЛЬНЫЙ парсинг CSV (ищет данные по ключевым словам в любом месте)
+  // УНИВЕРСАЛЬНЫЙ парсинг CSV
   function parseCSV(text, fileName) {
-    addLog(`Обработка файла: ${fileName}`);
+    addLog(`📄 Обработка файла: ${fileName}`);
     const lines = text.split(/\r?\n/);
     
     let participant = {
@@ -219,11 +224,9 @@
       consultant: "",
       tabTeam: "",
       stars: 0,
-      fileName: fileName,
-      rawText: text.substring(0, 500)
+      fileName: fileName
     };
     
-    // Перебираем каждую строку
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const lowerLine = line.toLowerCase();
@@ -233,13 +236,11 @@
         const parts = line.split(';');
         if (parts[1] && parts[1].replace(/"/g, '').trim().length > 2) {
           participant.name = parts[1].replace(/"/g, '').trim();
-          addLog(`  → Найдено имя: ${participant.name}`);
-        } else if (parts[0] && (parts[0].includes('ФИО') || parts[0].includes('Имя')) && parts[1]) {
-          participant.name = parts[1].replace(/"/g, '').trim();
+          addLog(`  → Имя: ${participant.name}`);
         }
       }
       
-      // Ищем роль (Новичок / Опытный)
+      // Ищем роль
       if ((lowerLine.includes('роль') || lowerLine.includes('новичок') || lowerLine.includes('опытный')) && !participant.role) {
         if (lowerLine.includes('новичок')) {
           participant.role = 'Новичок';
@@ -278,14 +279,14 @@
           const num = parseInt(val);
           if (!isNaN(num) && num > 0 && num < 10000 && val === String(num)) {
             participant.stars = num;
-            addLog(`  → Найдено звёзд: ${participant.stars}`);
+            addLog(`  → Звёзды: ${participant.stars}`);
             break;
           }
         }
       }
     }
     
-    // Если не нашли роль, пытаемся определить по наличию заданий для новичков/опытных
+    // Если не нашли роль, определяем по тексту
     if (!participant.role) {
       if (text.includes('Выложить макеты') || text.includes('Сфоткать продукт')) {
         participant.role = 'Новичок';
@@ -297,10 +298,10 @@
     }
     
     if (participant.name && participant.stars > 0) {
-      addLog(`✅ Успешно добавлен: ${participant.name} (${participant.role}) — ${participant.stars}⭐`);
+      addLog(`✅ Успешно: ${participant.name} (${participant.role}) — ${participant.stars}⭐`);
       return participant;
     } else {
-      addLog(`⚠️ Не удалось распознать файл: ${fileName}. Убедитесь, что это CSV из трекера участника.`);
+      addLog(`⚠️ Не удалось распознать файл: ${fileName}`);
       return null;
     }
   }
@@ -314,24 +315,24 @@
         const text = await file.text();
         const participant = parseCSV(text, file.name);
         if (participant && participant.name) {
-          // Проверяем дубликаты
           const existingIndex = participants.findIndex(p => p.name === participant.name);
           if (existingIndex !== -1) {
             participants[existingIndex] = participant;
-            addLog(`🔄 Обновлён участник: ${participant.name}`);
+            addLog(`🔄 Обновлён: ${participant.name}`);
           } else {
             participants.push(participant);
             addedCount++;
+            addLog(`➕ Добавлен: ${participant.name}`);
           }
         }
       } else {
-        addLog(`❌ Файл ${file.name} не является CSV`);
+        addLog(`❌ Файл ${file.name} не CSV`);
       }
     }
     
     saveData();
     renderRating();
-    addLog(`📊 Всего участников в рейтинге: ${participants.length}`);
+    addLog(`📊 Итого участников: ${participants.length}`);
   }
 
   function renderRating() {
@@ -352,7 +353,7 @@
       if (idx === 0) rankClass = 'rank-1';
       else if (idx === 1) rankClass = 'rank-2';
       else if (idx === 2) rankClass = 'rank-3';
-      newbieHtml += `<tr class="${rankClass}"><td>${idx + 1}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.consultant)}</td><td>${escapeHtml(p.tabTeam)}</td><td><strong>${p.stars}</strong></td></tr>`;
+      newbieHtml += `<tr class="${rankClass}"><td>${idx + 1}</td><td style="word-break:break-word;">${escapeHtml(p.name)}</td><td style="word-break:break-word;">${escapeHtml(p.consultant)}</td><td style="word-break:break-word;">${escapeHtml(p.tabTeam)}</td><td style="text-align:center;"><strong>${p.stars}</strong></td></tr>`;
     });
     newbieHtml += `</tbody></table>`;
     if (newbieList.length === 0) newbieHtml = '<div style="text-align:center; color:#999;">Нет загруженных отчётов новичков</div>';
@@ -365,11 +366,13 @@
       if (idx === 0) rankClass = 'rank-1';
       else if (idx === 1) rankClass = 'rank-2';
       else if (idx === 2) rankClass = 'rank-3';
-      proHtml += `<tr class="${rankClass}"><td>${idx + 1}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.consultant)}</td><td>${escapeHtml(p.tabTeam)}</td><td><strong>${p.stars}</strong></td></tr>`;
+      proHtml += `<tr class="${rankClass}"><td>${idx + 1}</td><td style="word-break:break-word;">${escapeHtml(p.name)}</td><td style="word-break:break-word;">${escapeHtml(p.consultant)}</td><td style="word-break:break-word;">${escapeHtml(p.tabTeam)}</td><td style="text-align:center;"><strong>${p.stars}</strong></td></tr>`;
     });
     proHtml += `</tbody></table>`;
     if (proList.length === 0) proHtml = '<div style="text-align:center; color:#999;">Нет загруженных отчётов опытных участников</div>';
     document.getElementById('proRating').innerHTML = proHtml;
+    
+    addLog(`📊 Рейтинг обновлён: Новичков ${newbieList.length}, Опытных ${proList.length}`);
   }
 
   function escapeHtml(str) {
@@ -389,6 +392,11 @@
       renderRating();
       addLog('🗑 Все данные очищены');
     }
+  }
+
+  function refreshRating() {
+    renderRating();
+    addLog('🔄 Рейтинг принудительно обновлён');
   }
 
   function exportRating() {
@@ -426,6 +434,7 @@
     addLog('📎 Рейтинг выгружен в Excel');
   }
 
+  // ========== ИНИЦИАЛИЗАЦИЯ ==========
   const uploadArea = document.getElementById('uploadArea');
   const fileInput = document.getElementById('fileInput');
   
@@ -446,10 +455,15 @@
   
   fileInput.addEventListener('change', async (e) => {
     const files = Array.from(e.target.files);
-    await processFiles(files);
-    fileInput.value = '';
+    if (files.length > 0) {
+      await processFiles(files);
+      fileInput.value = '';
+    } else {
+      addLog('⚠️ Файлы не выбраны');
+    }
   });
   
+  document.getElementById('refreshBtn').addEventListener('click', refreshRating);
   document.getElementById('clearDataBtn').addEventListener('click', clearData);
   document.getElementById('exportRatingBtn').addEventListener('click', exportRating);
   
