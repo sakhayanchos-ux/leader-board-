@@ -121,6 +121,16 @@
       flex-wrap: wrap;
       margin-top: 15px;
     }
+    .log-area {
+      background: #F0F2F5;
+      border-radius: 16px;
+      padding: 10px;
+      font-size: 0.7rem;
+      color: #4D675C;
+      margin-top: 15px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
     footer {
       text-align: center;
       font-size: 0.65rem;
@@ -134,28 +144,28 @@
   <h1>🏆 РЕЙТИНГ МАРАФОНА</h1>
   <div class="subhead">Загрузка отчётов участников → автоматический рейтинг</div>
 
-  <!-- Загрузка файлов -->
   <div class="card">
     <div class="card-title">📤 ЗАГРУЗИТЬ ОТЧЁТЫ УЧАСТНИКОВ</div>
     <div class="upload-area" id="uploadArea">
-      📂 Нажми или перетащи CSV/Excel файлы сюда<br>
+      📂 Нажми или перетащи CSV файлы сюда<br>
       <small>(отчёты, которые участники скачали из трекера)</small>
     </div>
-    <input type="file" id="fileInput" multiple accept=".csv,.xlsx,.xls" style="display:none">
+    <input type="file" id="fileInput" multiple accept=".csv" style="display:none">
     <div class="flex-buttons">
       <button class="btn" id="clearDataBtn">🗑 Очистить все данные</button>
       <button class="btn btn-outline" id="exportRatingBtn">📎 Выгрузить общий рейтинг (Excel)</button>
     </div>
+    <div class="log-area" id="logArea">
+      📌 Лог загрузки: готов к приёму файлов
+    </div>
   </div>
 
-  <!-- Общая статистика -->
   <div class="stats-row" id="statsContainer">
     <div class="stat-card"><div class="stat-number" id="totalParticipants">0</div><div>👥 Участников</div></div>
     <div class="stat-card"><div class="stat-number" id="totalNewbieStars">0</div><div>🍃 Новички ⭐</div></div>
     <div class="stat-card"><div class="stat-number" id="totalProStars">0</div><div>🔥 Опытные ⭐</div></div>
   </div>
 
-  <!-- Рейтинги -->
   <div class="card">
     <div class="card-title">🍃 НОВИЧКИ</div>
     <div id="newbieRating">Загрузите отчёты для отображения рейтинга</div>
@@ -170,18 +180,24 @@
 </div>
 
 <script>
-  // Ключ хранения данных
-  const STORAGE_KEY = "leader_rating_FINAL";
-  
-  // Структура: { participants: [{ name, status, role, stars, date, fileData }] }
+  const STORAGE_KEY = "leader_rating_v2";
   let participants = [];
 
-  // Загрузка данных из localStorage
+  function addLog(msg) {
+    const logArea = document.getElementById('logArea');
+    const time = new Date().toLocaleTimeString();
+    logArea.innerHTML = `📌 [${time}] ${msg}<br>${logArea.innerHTML}`;
+    if (logArea.children.length > 20) {
+      logArea.innerHTML = logArea.innerHTML.split('<br>').slice(0, 20).join('<br>');
+    }
+  }
+
   function loadData() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
         participants = JSON.parse(saved);
+        addLog(`Загружено ${participants.length} участников из сохранённых данных`);
       } catch(e) { participants = []; }
     }
     renderRating();
@@ -191,106 +207,140 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(participants));
   }
 
-  // Парсинг CSV файла (формат из трекера участника)
+  // УНИВЕРСАЛЬНЫЙ парсинг CSV (ищет данные по ключевым словам в любом месте)
   function parseCSV(text, fileName) {
+    addLog(`Обработка файла: ${fileName}`);
     const lines = text.split(/\r?\n/);
+    
     let participant = {
       name: "",
       status: "",
-      discount: "",
+      role: "",
       consultant: "",
       tabTeam: "",
-      role: "",
       stars: 0,
-      fileName: fileName
+      fileName: fileName,
+      rawText: text.substring(0, 500)
     };
     
-    // Ищем данные участника
+    // Перебираем каждую строку
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      if (line.includes('ФИО') || line.includes('"ФИО"')) {
+      const lowerLine = line.toLowerCase();
+      
+      // Ищем ФИО
+      if ((lowerLine.includes('фио') || lowerLine.includes('ф.и.о') || lowerLine.includes('имя')) && !participant.name) {
         const parts = line.split(';');
-        if (parts[1]) participant.name = parts[1].replace(/"/g, '').trim();
+        if (parts[1] && parts[1].replace(/"/g, '').trim().length > 2) {
+          participant.name = parts[1].replace(/"/g, '').trim();
+          addLog(`  → Найдено имя: ${participant.name}`);
+        } else if (parts[0] && (parts[0].includes('ФИО') || parts[0].includes('Имя')) && parts[1]) {
+          participant.name = parts[1].replace(/"/g, '').trim();
+        }
       }
-      if (line.includes('Статус') && !line.includes('Статус (НП')) {
-        const parts = line.split(';');
-        if (parts[1]) participant.status = parts[1].replace(/"/g, '').trim();
+      
+      // Ищем роль (Новичок / Опытный)
+      if ((lowerLine.includes('роль') || lowerLine.includes('новичок') || lowerLine.includes('опытный')) && !participant.role) {
+        if (lowerLine.includes('новичок')) {
+          participant.role = 'Новичок';
+          addLog(`  → Роль: Новичок`);
+        } else if (lowerLine.includes('опытный')) {
+          participant.role = 'Опытный';
+          addLog(`  → Роль: Опытный`);
+        } else {
+          const parts = line.split(';');
+          for (let p of parts) {
+            if (p.includes('Новичок')) participant.role = 'Новичок';
+            if (p.includes('Опытный')) participant.role = 'Опытный';
+          }
+        }
       }
-      if (line.includes('Роль') && !line.includes('Роль в марафоне')) {
-        const parts = line.split(';');
-        if (parts[1]) participant.role = parts[1].replace(/"/g, '').trim();
-      }
-      if (line.includes('Консультант') && !line.includes('Консультанта')) {
+      
+      // Ищем консультанта
+      if ((lowerLine.includes('консультант') || lowerLine.includes('куратор')) && !participant.consultant) {
         const parts = line.split(';');
         if (parts[1]) participant.consultant = parts[1].replace(/"/g, '').trim();
+        if (participant.consultant && participant.consultant.length > 0) addLog(`  → Консультант: ${participant.consultant}`);
       }
-      if (line.includes('Вышестоящий Tab Team')) {
+      
+      // Ищем Tab Team
+      if ((lowerLine.includes('tab team') || lowerLine.includes('вышестоящий')) && !participant.tabTeam) {
         const parts = line.split(';');
         if (parts[1]) participant.tabTeam = parts[1].replace(/"/g, '').trim();
+        if (participant.tabTeam && participant.tabTeam.length > 0) addLog(`  → Tab Team: ${participant.tabTeam}`);
       }
-      if (line.includes('ИТОГО ЗВЁЗД') || (line.includes('ВСЕГО ЗВЁЗД') && line.includes(';'))) {
+      
+      // Ищем звёзды
+      if ((lowerLine.includes('звёзд') || lowerLine.includes('звезд') || lowerLine.includes('всего')) && participant.stars === 0) {
         const parts = line.split(';');
-        for(let j = 0; j < parts.length; j++) {
-          if(parts[j].includes('ИТОГО ЗВЁЗД') || parts[j].includes('ВСЕГО ЗВЁЗД')) {
-            if(parts[j+1]) participant.stars = parseInt(parts[j+1]) || 0;
+        for (let j = 0; j < parts.length; j++) {
+          const val = parts[j].replace(/"/g, '').trim();
+          const num = parseInt(val);
+          if (!isNaN(num) && num > 0 && num < 10000 && val === String(num)) {
+            participant.stars = num;
+            addLog(`  → Найдено звёзд: ${participant.stars}`);
             break;
           }
         }
       }
     }
     
-    // Если не нашли звёзды, ищем последнюю строку
-    if (participant.stars === 0) {
-      for (let i = lines.length - 1; i >= 0; i--) {
-        const line = lines[i];
-        if (line.includes(';') && !line.includes('ДАННЫЕ') && !line.includes('Задание')) {
-          const parts = line.split(';');
-          const lastVal = parts[parts.length - 1];
-          if (!isNaN(parseFloat(lastVal)) && parseFloat(lastVal) > 0) {
-            participant.stars = parseFloat(lastVal);
-            break;
-          }
-        }
+    // Если не нашли роль, пытаемся определить по наличию заданий для новичков/опытных
+    if (!participant.role) {
+      if (text.includes('Выложить макеты') || text.includes('Сфоткать продукт')) {
+        participant.role = 'Новичок';
+        addLog(`  → Роль определена автоматически: Новичок`);
+      } else if (text.includes('20 рассылок') || text.includes('Изучить бизнес')) {
+        participant.role = 'Опытный';
+        addLog(`  → Роль определена автоматически: Опытный`);
       }
     }
     
     if (participant.name && participant.stars > 0) {
+      addLog(`✅ Успешно добавлен: ${participant.name} (${participant.role}) — ${participant.stars}⭐`);
       return participant;
+    } else {
+      addLog(`⚠️ Не удалось распознать файл: ${fileName}. Убедитесь, что это CSV из трекера участника.`);
+      return null;
     }
-    return null;
   }
 
-  // Обработка загруженных файлов
   async function processFiles(files) {
+    addLog(`📂 Загружено файлов: ${files.length}`);
+    let addedCount = 0;
+    
     for (const file of files) {
       if (file.name.endsWith('.csv') || file.type === 'text/csv') {
         const text = await file.text();
         const participant = parseCSV(text, file.name);
         if (participant && participant.name) {
-          // Проверяем, нет ли уже такого участника (по имени + консультанту)
-          const existingIndex = participants.findIndex(p => p.name === participant.name && p.consultant === participant.consultant);
+          // Проверяем дубликаты
+          const existingIndex = participants.findIndex(p => p.name === participant.name);
           if (existingIndex !== -1) {
             participants[existingIndex] = participant;
+            addLog(`🔄 Обновлён участник: ${participant.name}`);
           } else {
             participants.push(participant);
+            addedCount++;
           }
         }
+      } else {
+        addLog(`❌ Файл ${file.name} не является CSV`);
       }
     }
+    
     saveData();
     renderRating();
+    addLog(`📊 Всего участников в рейтинге: ${participants.length}`);
   }
 
-  // Рендер рейтинга
   function renderRating() {
-    const newbieList = participants.filter(p => p.role === 'Новичок' || p.role === 'newbie');
-    const proList = participants.filter(p => p.role === 'Опытный' || p.role === 'pro');
+    const newbieList = participants.filter(p => p.role === 'Новичок');
+    const proList = participants.filter(p => p.role === 'Опытный');
     
-    // Сортировка по звёздам (по убыванию)
     newbieList.sort((a, b) => b.stars - a.stars);
     proList.sort((a, b) => b.stars - a.stars);
     
-    // Общая статистика
     document.getElementById('totalParticipants').innerText = participants.length;
     document.getElementById('totalNewbieStars').innerText = newbieList.reduce((sum, p) => sum + p.stars, 0);
     document.getElementById('totalProStars').innerText = proList.reduce((sum, p) => sum + p.stars, 0);
@@ -332,19 +382,18 @@
     });
   }
 
-  // Очистка данных
   function clearData() {
     if (confirm('Удалить все загруженные отчёты? Рейтинг обнулится.')) {
       participants = [];
       saveData();
       renderRating();
+      addLog('🗑 Все данные очищены');
     }
   }
 
-  // Экспорт общего рейтинга в Excel
   function exportRating() {
-    const newbieList = participants.filter(p => p.role === 'Новичок' || p.role === 'newbie');
-    const proList = participants.filter(p => p.role === 'Опытный' || p.role === 'pro');
+    const newbieList = participants.filter(p => p.role === 'Новичок');
+    const proList = participants.filter(p => p.role === 'Опытный');
     newbieList.sort((a, b) => b.stars - a.stars);
     proList.sort((a, b) => b.stars - a.stars);
     
@@ -374,10 +423,9 @@
     link.download = `rating_${new Date().toISOString().slice(0,10)}.csv`;
     link.href = URL.createObjectURL(blob);
     link.click();
-    URL.revokeObjectURL(link.href);
+    addLog('📎 Рейтинг выгружен в Excel');
   }
 
-  // UI события
   const uploadArea = document.getElementById('uploadArea');
   const fileInput = document.getElementById('fileInput');
   
