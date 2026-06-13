@@ -2,30 +2,31 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-  <title>Рейтинг марафона — лидер</title>
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Рейтинг марафона">
-  <meta name="theme-color" content="#FF8C00">
+  <!-- ИКОНКА -->
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22%D0%A0%D0%B5%D0%B9%D1%82%D0%B8%D0%BD%D0%B3%20%D0%BC%D0%B0%D1%80%D0%B0%D1%84%D0%BE%D0%BD%D0%B0%22%2C%22short_name%22%3A%22%D0%A0%D0%B5%D0%B9%D1%82%D0%B8%D0%BD%D0%B3%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23F5F7FA%22%2C%22theme_color%22%3A%22%23FF769A%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22icon.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Рейтинг марафона">
+<meta name="theme-color" content="#FF769A">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       background: #F5F7FA;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       padding: 20px 12px 40px;
       color: #1E2A2E;
     }
     .container { max-width: 1100px; margin: 0 auto; }
     h1 { font-size: 1.9rem; font-weight: 800; text-align: center; color: #4D675C; margin-bottom: 4px; }
     .subhead { text-align: center; color: #6B7F74; background: white; display: inline-block; width: auto; margin: 0 auto 20px; padding: 6px 18px; border-radius: 60px; font-size: 0.8rem; font-weight: 500; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
-    
     .card {
       background: white;
       border-radius: 28px;
       padding: 18px 16px;
       margin-bottom: 20px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
       border: 1px solid #EDF0F2;
     }
     .card-title {
@@ -99,7 +100,6 @@
       color: white;
       font-weight: 700;
     }
-    .rating-table tr:nth-child(even) { background: #FEF4F6; }
     .log-area {
       background: #F0F2F5;
       border-radius: 16px;
@@ -122,17 +122,18 @@
 <body>
 <div class="container">
   <h1>🏆 РЕЙТИНГ МАРАФОНА</h1>
-  <div class="subhead">Загрузите CSV-отчёты участников → автоматический рейтинг и статистика</div>
+  <div class="subhead">Загрузите CSV-отчёты участников → рейтинг + статистика</div>
 
   <div class="card">
     <div class="card-title">📤 ЗАГРУЗИТЬ ОТЧЁТЫ</div>
     <div class="upload-area" id="uploadArea">
-      📂 Нажми или перетащи CSV файлы сюда
+      📂 Нажми или перетащи CSV файлы сюда<br>
+      <small>(отчёты, которые участники скачали из трекера)</small>
     </div>
     <input type="file" id="fileInput" multiple accept=".csv" style="display:none">
     <div class="flex-buttons">
       <button class="btn" id="clearBtn">🗑 Очистить все данные</button>
-      <button class="btn btn-outline" id="exportBtn">📎 Выгрузить рейтинг в Excel</button>
+      <button class="btn btn-outline" id="exportBtn">📎 Выгрузить рейтинг (Excel CSV)</button>
     </div>
     <div class="log-area" id="logArea">📌 Лог загрузки: готов к приёму файлов</div>
   </div>
@@ -172,7 +173,7 @@
   function parseCSV(text, fileName) {
     addLog(`📄 Обработка: ${fileName}`);
     const lines = text.split(/\r?\n/);
-    let p = { name: "", status: "", role: "", consultant: "", tabTeam: "", stars: 0, discount: 0 };
+    let p = { name: "", role: "", consultant: "", tabTeam: "", stars: 0, discount: 0 };
     for (let line of lines) {
       const l = line.toLowerCase();
       if ((l.includes('фио') || l.includes('имя')) && !p.name) {
@@ -202,10 +203,10 @@
           if (!isNaN(num) && (num === 25 || num === 35 || num === 42)) { p.discount = num; addLog(`  → Скидка: ${num}%`); break; }
         }
       }
-      if ((l.includes('звёзд') || l.includes('звезд') || l.includes('всего')) && p.stars === 0) {
+      if ((l.includes('звёзд') || l.includes('звезд')) && p.stars === 0) {
         const parts = line.split(';');
-        for (let j=0; j<parts.length; j++) {
-          let num = parseInt(parts[j].replace(/"/g, ''));
+        for (let part of parts) {
+          let num = parseInt(part.replace(/"/g, ''));
           if (!isNaN(num) && num > 0 && num < 10000) { p.stars = num; addLog(`  → Звёзды: ${p.stars}`); break; }
         }
       }
@@ -239,44 +240,33 @@
     const newbies = participants.filter(p => p.role === 'Новичок').sort((a,b) => b.stars - a.stars);
     const pros = participants.filter(p => p.role === 'Опытный').sort((a,b) => b.stars - a.stars);
     
-    // Статистика
-    const newbieCount = newbies.length;
-    const proCount = pros.length;
-    const wtCount = pros.filter(p => p.tabTeam === 'WT' || p.tabTeam === 'World Team' || p.tabTeam?.toLowerCase().includes('world')).length;
-    const oldSupCount = proCount - wtCount;
+    const wtCount = pros.filter(p => p.tabTeam === 'WT' || p.tabTeam === 'World Team' || (p.tabTeam && p.tabTeam.toLowerCase().includes('world'))).length;
+    const oldSupCount = pros.length - wtCount;
     const discount25 = newbies.filter(p => p.discount === 25).length;
     const discount35 = newbies.filter(p => p.discount === 35).length;
     const discount42 = newbies.filter(p => p.discount === 42).length;
-    const newSupCount = newbies.filter(p => p.status === 'Супервайзер' || p.status?.toLowerCase().includes('супер')).length;
     
     let statsHtml = `
-      <div class="stat-box"><div class="stat-number">${newbieCount}</div><div>🍃 Новички</div></div>
-      <div class="stat-box"><div class="stat-number">${proCount}</div><div>🔥 Опытные</div></div>
-      <div class="stat-box"><div class="stat-number">${oldSupCount}</div><div>👔 Старые супервайзеры</div></div>
+      <div class="stat-box"><div class="stat-number">${newbies.length}</div><div>🍃 Новички</div></div>
+      <div class="stat-box"><div class="stat-number">${pros.length}</div><div>🔥 Опытные</div></div>
+      <div class="stat-box"><div class="stat-number">${oldSupCount}</div><div>👔 Старые супервайзоры</div></div>
       <div class="stat-box"><div class="stat-number">${wtCount}</div><div>🌍 World Team</div></div>
       <div class="stat-box"><div class="stat-number">${discount25}</div><div>💚 25%</div></div>
       <div class="stat-box"><div class="stat-number">${discount35}</div><div>💛 35%</div></div>
       <div class="stat-box"><div class="stat-number">${discount42}</div><div>🧡 42%</div></div>
-      <div class="stat-box"><div class="stat-number">${newSupCount}</div><div>⭐ Новые супервайзеры</div></div>
     `;
     document.getElementById('statsGrid').innerHTML = statsHtml;
     
-    // Таблица новичков
-    let newbieHtml = `<table class="rating-table"><thead><tr><th>№</th><th>Участник</th><th>Консультант</th><th>Tab Team</th><th>Скидка</th><th>⭐ Звёзды</th></tr></thead><tbody>`;
-    newbies.forEach((p,i) => {
-      newbieHtml += `<tr><td>${i+1}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.consultant)}</td><td>${escapeHtml(p.tabTeam)}</td><td>${p.discount || '—'}%</td><td><b>${p.stars}</b></td></tr>`;
-    });
-    newbieHtml += `</tbody></table>`;
-    if (newbies.length === 0) newbieHtml = '<div style="text-align:center; color:#999;">Нет загруженных отчётов новичков</div>';
+    let newbieHtml = `<table class="rating-table"><thead><tr><th>#</th><th>Участник</th><th>Консультант</th><th>Tab Team</th><th>Скидка</th><th>⭐ Звёзды</th></tr></thead><tbody>`;
+    newbies.forEach((p,i) => { newbieHtml += `<tr><td>${i+1}<td>${escapeHtml(p.name)}<td>${escapeHtml(p.consultant)}<td>${escapeHtml(p.tabTeam)}<td>${p.discount||'—'}%<td><b>${p.stars}</b>`; });
+    newbieHtml += `</tbody>月饼`;
+    if (!newbies.length) newbieHtml = '<div style="text-align:center; color:#999;">Нет отчётов новичков</div>';
     document.getElementById('newbieTable').innerHTML = newbieHtml;
     
-    // Таблица опытных
-    let proHtml = `<table class="rating-table"><thead><tr><th>№</th><th>Участник</th><th>Консультант</th><th>Tab Team</th><th>⭐ Звёзды</th></tr></thead><tbody>`;
-    pros.forEach((p,i) => {
-      proHtml += `<tr><td>${i+1}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.consultant)}</td><td>${escapeHtml(p.tabTeam)}</td><td><b>${p.stars}</b></td></tr>`;
-    });
-    proHtml += `</tbody></table>`;
-    if (pros.length === 0) proHtml = '<div style="text-align:center; color:#999;">Нет загруженных отчётов опытных</div>';
+    let proHtml = `<table class="rating-table"><thead><tr><th>#</th><th>Участник</th><th>Консультант</th><th>Tab Team</th><th>⭐ Звёзды</th></tr></thead><tbody>`;
+    pros.forEach((p,i) => { proHtml += `<tr><td>${i+1}<td>${escapeHtml(p.name)}<td>${escapeHtml(p.consultant)}<td>${escapeHtml(p.tabTeam)}<td><b>${p.stars}</b>`; });
+    proHtml += `</tbody>月饼`;
+    if (!pros.length) proHtml = '<div style="text-align:center; color:#999;">Нет отчётов опытных</div>';
     document.getElementById('proTable').innerHTML = proHtml;
   }
 
@@ -284,54 +274,38 @@
 
   function clearData() { if (confirm('Удалить все загруженные отчёты?')) { participants = []; saveData(); renderAll(); addLog('🗑 Все данные очищены'); } }
 
-  function exportToExcel() {
+  function exportToCSV() {
     const newbies = participants.filter(p => p.role === 'Новичок').sort((a,b) => b.stars - a.stars);
     const pros = participants.filter(p => p.role === 'Опытный').sort((a,b) => b.stars - a.stars);
-    const wtCount = pros.filter(p => p.tabTeam === 'WT' || p.tabTeam === 'World Team' || p.tabTeam?.toLowerCase().includes('world')).length;
-    const oldSupCount = pros.length - wtCount;
-    const discount25 = newbies.filter(p => p.discount === 25).length;
-    const discount35 = newbies.filter(p => p.discount === 35).length;
-    const discount42 = newbies.filter(p => p.discount === 42).length;
-    const newSupCount = newbies.filter(p => p.status === 'Супервайзер' || p.status?.toLowerCase().includes('супер')).length;
     
-    let html = `<!DOCTYPE html>
-    <html><head><meta charset="UTF-8"><title>Рейтинг марафона</title><style>
-      body { font-family: 'Segoe UI', Arial; margin: 20px; }
-      h1 { color: #4D675C; }
-      table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-      th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; }
-      th { background: #FF769A; color: white; }
-    </style></head><body>
-    <h1>🏆 РЕЙТИНГ МАРАФОНА</h1>
-    <p><strong>Дата выгрузки:</strong> ${new Date().toLocaleString()}</p>
+    let rows = [];
+    rows.push(['"ОБЩИЙ РЕЙТИНГ МАРАФОНА"','']);
+    rows.push(['"Дата выгрузки"',`"${new Date().toLocaleString()}"`]);
+    rows.push([]);
+    rows.push(['"🍃 НОВИЧКИ"','','','','']);
+    rows.push(['"Место"','"Участник"','"Консультант"','"Tab Team"','"⭐ Звёзды"']);
+    newbies.forEach((p,i) => { rows.push([i+1, p.name, p.consultant, p.tabTeam, p.stars]); });
+    if (!newbies.length) rows.push(['"Нет данных"','','','','']);
+    rows.push([]);
+    rows.push(['"🔥 ОПЫТНЫЕ"','','','','']);
+    rows.push(['"Место"','"Участник"','"Консультант"','"Tab Team"','"⭐ Звёзды"']);
+    pros.forEach((p,i) => { rows.push([i+1, p.name, p.consultant, p.tabTeam, p.stars]); });
+    if (!pros.length) rows.push(['"Нет данных"','','','','']);
+    rows.push([]);
+    rows.push(['"📊 ИТОГОВАЯ СТАТИСТИКА"','']);
+    rows.push(['"Всего участников"', participants.length]);
+    rows.push(['"Всего звёзд (новички)"', newbies.reduce((s,p)=>s+p.stars,0)]);
+    rows.push(['"Всего звёзд (опытные)"', pros.reduce((s,p)=>s+p.stars,0)]);
+    rows.push(['"Общий рейтинг (сумма всех звёзд)"', newbies.reduce((s,p)=>s+p.stars,0) + pros.reduce((s,p)=>s+p.stars,0)]);
     
-    <h2>📊 ОБЩАЯ СТАТИСТИКА</h2>
-    <table>
-      <tr><th>Показатель</th><th>Значение</th></tr>
-      <tr><td>🍃 Новички</td><td>${newbies.length}</td></tr>
-      <tr><td>🔥 Опытные</td><td>${pros.length}</td></tr>
-      <tr><td>👔 Старые супервайзеры</td><td>${oldSupCount}</td></tr>
-      <tr><td>🌍 World Team</td><td>${wtCount}</td></tr>
-      <tr><td>💚 Скидка 25%</td><td>${discount25}</td></tr>
-      <tr><td>💛 Скидка 35%</td><td>${discount35}</td></tr>
-      <tr><td>🧡 Скидка 42%</td><td>${discount42}</td></tr>
-      <tr><td>⭐ Новые супервайзеры</td><td>${newSupCount}</td></tr>
-    </table>
-    
-    <h2>🍃 НОВИЧКИ</h2>
-    <table>
-      <tr><th>№</th><th>Участник</th><th>Консультант</th><th>Tab Team</th><th>Скидка</th><th>⭐ Звёзды</th></tr>`;
-    newbies.forEach((p,i) => { html += `<tr><td>${i+1}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.consultant)}</td><td>${escapeHtml(p.tabTeam)}</td><td>${p.discount || '—'}%</td><td>${p.stars}</td></tr>`; });
-    html += `</table><h2>🔥 ОПЫТНЫЕ</h2><table><tr><th>№</th><th>Участник</th><th>Консультант</th><th>Tab Team</th><th>⭐ Звёзды</th></tr>`;
-    pros.forEach((p,i) => { html += `<tr><td>${i+1}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.consultant)}</td><td>${escapeHtml(p.tabTeam)}</td><td>${p.stars}</td></tr>`; });
-    html += `</table></body></html>`;
-    const blob = new Blob([html], {type: 'application/vnd.ms-excel'});
+    const csv = rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';')).join('\n');
+    const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv;charset=utf-8;'});
     const link = document.createElement('a');
-    link.download = `rating_${new Date().toISOString().slice(0,10)}.xls`;
+    link.download = `rating_${new Date().toISOString().slice(0,10)}.csv`;
     link.href = URL.createObjectURL(blob);
     link.click();
     URL.revokeObjectURL(link.href);
-    addLog('📎 Рейтинг выгружен в Excel (таблица с границами)');
+    addLog('📎 Рейтинг выгружен в CSV (Excel)');
   }
 
   document.getElementById('uploadArea').addEventListener('click', () => document.getElementById('fileInput').click());
@@ -340,7 +314,7 @@
   document.getElementById('uploadArea').addEventListener('drop', async e => { e.preventDefault(); document.getElementById('uploadArea').style.borderColor = '#FF769A'; await processFiles(Array.from(e.dataTransfer.files)); });
   document.getElementById('fileInput').addEventListener('change', async e => { await processFiles(Array.from(e.target.files)); e.target.value = ''; });
   document.getElementById('clearBtn').addEventListener('click', clearData);
-  document.getElementById('exportBtn').addEventListener('click', exportToExcel);
+  document.getElementById('exportBtn').addEventListener('click', exportToCSV);
   loadData();
 </script>
 </body>
