@@ -2,76 +2,80 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <!-- ИКОНКА -->
-<link rel="icon" type="image/png" href="icon.png">
-<link rel="apple-touch-icon" href="icon.png">
-<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22%D0%A0%D0%B5%D0%B9%D1%82%D0%B8%D0%BD%D0%B3%20%D0%BC%D0%B0%D1%80%D0%B0%D1%84%D0%BE%D0%BD%D0%B0%22%2C%22short_name%22%3A%22%D0%A0%D0%B5%D0%B9%D1%82%D0%B8%D0%BD%D0%B3%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23F5F7FA%22%2C%22theme_color%22%3A%22%23FF769A%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22icon.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Рейтинг марафона">
-<meta name="theme-color" content="#FF769A">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Рейтинг марафона</title>
+  
+  <!-- ИКОНКА для вкладки и сохранения на экран -->
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22%D0%A0%D0%B5%D0%B9%D1%82%D0%B8%D0%BD%D0%B3%20%D0%BC%D0%B0%D1%80%D0%B0%D1%84%D0%BE%D0%BD%D0%B0%22%2C%22short_name%22%3A%22%D0%A0%D0%B5%D0%B9%D1%82%D0%B8%D0%BD%D0%B3%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23F5F7FA%22%2C%22theme_color%22%3A%22%23FF769A%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22icon.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Рейтинг ИБМ">
+  <meta name="theme-color" content="#FF769A">
+  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       background: #F5F7FA;
       font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      padding: 20px 12px 40px;
+      padding: 16px 8px 30px;
       color: #1E2A2E;
     }
-    .container { max-width: 1100px; margin: 0 auto; }
-    h1 { font-size: 1.9rem; font-weight: 800; text-align: center; color: #4D675C; margin-bottom: 4px; }
-    .subhead { text-align: center; color: #6B7F74; background: white; display: inline-block; width: auto; margin: 0 auto 20px; padding: 6px 18px; border-radius: 60px; font-size: 0.8rem; font-weight: 500; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+    .container { max-width: 650px; margin: 0 auto; }
+    h1 { font-size: 1.6rem; font-weight: 800; text-align: center; color: #4D675C; margin-bottom: 4px; }
+    .subhead { text-align: center; color: #6B7F74; background: white; display: inline-block; width: auto; margin: 0 auto 16px; padding: 4px 14px; border-radius: 40px; font-size: 0.7rem; font-weight: 500; }
+    
     .card {
       background: white;
-      border-radius: 28px;
-      padding: 18px 16px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+      border-radius: 24px;
+      padding: 14px 12px;
+      margin-bottom: 16px;
       border: 1px solid #EDF0F2;
     }
     .card-title {
       font-weight: 700;
-      font-size: 1.2rem;
+      font-size: 1rem;
       color: #FF769A;
-      margin-bottom: 14px;
-      border-left: 4px solid #FF769A;
-      padding-left: 12px;
+      margin-bottom: 10px;
+      border-left: 3px solid #FF769A;
+      padding-left: 10px;
     }
     .upload-area {
-      border: 2px dashed #FF769A;
-      border-radius: 24px;
-      padding: 30px;
+      border: 1.5px dashed #FF769A;
+      border-radius: 20px;
+      padding: 20px;
       text-align: center;
       background: #FFF9FA;
       cursor: pointer;
-      margin-bottom: 20px;
+      font-size: 0.75rem;
     }
     .stats-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 15px;
-      margin-bottom: 20px;
+      gap: 8px;
+      margin-bottom: 16px;
     }
     .stat-box {
       background: linear-gradient(135deg, #FF769A, #FF98B5);
       color: white;
-      border-radius: 20px;
-      padding: 12px;
+      border-radius: 16px;
+      padding: 8px 6px;
       flex: 1;
-      min-width: 130px;
+      min-width: 80px;
       text-align: center;
+      font-size: 0.7rem;
     }
-    .stat-number { font-size: 1.8rem; font-weight: 800; }
+    .stat-number { font-size: 1.3rem; font-weight: 800; }
     .btn {
       background: #FF769A;
       border: none;
-      padding: 10px 20px;
+      padding: 8px 16px;
       border-radius: 40px;
       font-weight: 600;
       color: white;
-      font-size: 0.8rem;
+      font-size: 0.7rem;
       cursor: pointer;
-      margin-top: 10px;
     }
     .btn-outline {
       background: transparent;
@@ -80,75 +84,84 @@
     }
     .flex-buttons {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
-      margin-top: 15px;
+      margin-top: 12px;
     }
     .rating-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 20px;
+      font-size: 0.7rem;
     }
     .rating-table th, .rating-table td {
       border: 1px solid #E2E8F0;
-      padding: 10px 8px;
+      padding: 6px 4px;
       text-align: left;
-      font-size: 0.75rem;
     }
     .rating-table th {
       background: #FF769A;
       color: white;
-      font-weight: 700;
+      font-weight: 600;
     }
     .log-area {
       background: #F0F2F5;
-      border-radius: 16px;
-      padding: 10px;
-      font-size: 0.7rem;
+      border-radius: 14px;
+      padding: 8px;
+      font-size: 0.65rem;
       color: #4D675C;
-      margin-top: 15px;
-      max-height: 150px;
+      margin-top: 12px;
+      max-height: 120px;
       overflow-y: auto;
       font-family: monospace;
     }
     footer {
       text-align: center;
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       color: #9CA7A1;
-      margin-top: 24px;
+      margin-top: 20px;
+      line-height: 1.5;
+    }
+    footer a {
+      color: #FF769A;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
 <div class="container">
   <h1>🏆 РЕЙТИНГ МАРАФОНА</h1>
-  <div class="subhead">Загрузите CSV-отчёты участников → рейтинг + статистика</div>
+  <div class="subhead">Загрузите CSV-отчёты участников</div>
 
   <div class="card">
     <div class="card-title">📤 ЗАГРУЗИТЬ ОТЧЁТЫ</div>
     <div class="upload-area" id="uploadArea">
-      📂 Нажми или перетащи CSV файлы сюда<br>
-      <small>(отчёты, которые участники скачали из трекера)</small>
+      📂 Нажми или перетащи CSV файлы
     </div>
     <input type="file" id="fileInput" multiple accept=".csv" style="display:none">
     <div class="flex-buttons">
-      <button class="btn" id="clearBtn">🗑 Очистить все данные</button>
-      <button class="btn btn-outline" id="exportBtn">📎 Выгрузить рейтинг (Excel CSV)</button>
+      <button class="btn" id="clearBtn">🗑 Очистить</button>
+      <button class="btn btn-outline" id="exportBtn">📎 Excel (CSV)</button>
     </div>
-    <div class="log-area" id="logArea">📌 Лог загрузки: готов к приёму файлов</div>
+    <div class="log-area" id="logArea">📌 Лог загрузки</div>
   </div>
 
   <div class="stats-grid" id="statsGrid"></div>
 
-  <div class="card"><div class="card-title">🍃 НОВИЧКИ (НП и новые супервайзеры)</div>
-    <div id="newbieTable">Загрузите отчёты</div>
+  <div class="card">
+    <div class="card-title">🍃 НОВИЧКИ (НП и новые супервайзеры)</div>
+    <div id="newbieTable">Нет данных</div>
   </div>
 
-  <div class="card"><div class="card-title">🔥 ОПЫТНЫЕ (старые супервайзеры / WT)</div>
-    <div id="proTable">Загрузите отчёты</div>
+  <div class="card">
+    <div class="card-title">🔥 ОПЫТНЫЕ (старые супервайзеры / WT)</div>
+    <div id="proTable">Нет данных</div>
   </div>
 
-  <footer>⚡ Данные хранятся в браузере. При загрузке новых файлов рейтинг обновляется.</footer>
+  <footer>
+    © 2026 · Разработчик Скрябина Сахаяна · 
+    <a href="https://wa.me/+79142609616" target="_blank">📞 WhatsApp</a><br>
+    <span style="font-size:0.55rem;">⚡ Данные сохраняются автоматически</span>
+  </footer>
 </div>
 
 <script>
@@ -159,7 +172,7 @@
     const log = document.getElementById('logArea');
     const time = new Date().toLocaleTimeString();
     log.innerHTML = `📌 [${time}] ${msg}<br>${log.innerHTML}`;
-    if (log.innerHTML.split('<br>').length > 30) log.innerHTML = log.innerHTML.split('<br>').slice(0,30).join('<br>');
+    if (log.innerHTML.split('<br>').length > 20) log.innerHTML = log.innerHTML.split('<br>').slice(0,20).join('<br>');
   }
 
   function loadData() {
@@ -171,7 +184,7 @@
   function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(participants)); }
 
   function parseCSV(text, fileName) {
-    addLog(`📄 Обработка: ${fileName}`);
+    addLog(`📄 ${fileName}`);
     const lines = text.split(/\r?\n/);
     let p = { name: "", role: "", consultant: "", tabTeam: "", stars: 0, discount: 0 };
     for (let line of lines) {
@@ -215,8 +228,8 @@
       if (text.includes('Выложить макеты')) p.role = 'Новичок';
       else if (text.includes('20 рассылок')) p.role = 'Опытный';
     }
-    if (p.name && p.stars > 0) { addLog(`✅ ${p.name} (${p.role}) — ${p.stars}⭐`); return p; }
-    addLog(`⚠️ Не распознан: ${fileName}`);
+    if (p.name && p.stars > 0) { addLog(`✅ ${p.name} — ${p.stars}⭐`); return p; }
+    addLog(`⚠️ Не распознан`);
     return null;
   }
 
@@ -240,7 +253,7 @@
     const newbies = participants.filter(p => p.role === 'Новичок').sort((a,b) => b.stars - a.stars);
     const pros = participants.filter(p => p.role === 'Опытный').sort((a,b) => b.stars - a.stars);
     
-    const wtCount = pros.filter(p => p.tabTeam === 'WT' || p.tabTeam === 'World Team' || (p.tabTeam && p.tabTeam.toLowerCase().includes('world'))).length;
+    const wtCount = pros.filter(p => p.tabTeam === 'WT' || (p.tabTeam && p.tabTeam.toLowerCase().includes('world'))).length;
     const oldSupCount = pros.length - wtCount;
     const discount25 = newbies.filter(p => p.discount === 25).length;
     const discount35 = newbies.filter(p => p.discount === 35).length;
@@ -249,63 +262,55 @@
     let statsHtml = `
       <div class="stat-box"><div class="stat-number">${newbies.length}</div><div>🍃 Новички</div></div>
       <div class="stat-box"><div class="stat-number">${pros.length}</div><div>🔥 Опытные</div></div>
-      <div class="stat-box"><div class="stat-number">${oldSupCount}</div><div>👔 Старые супервайзоры</div></div>
-      <div class="stat-box"><div class="stat-number">${wtCount}</div><div>🌍 World Team</div></div>
+      <div class="stat-box"><div class="stat-number">${oldSupCount}</div><div>👔 Старые суперв.</div></div>
+      <div class="stat-box"><div class="stat-number">${wtCount}</div><div>🌍 WT</div></div>
       <div class="stat-box"><div class="stat-number">${discount25}</div><div>💚 25%</div></div>
       <div class="stat-box"><div class="stat-number">${discount35}</div><div>💛 35%</div></div>
       <div class="stat-box"><div class="stat-number">${discount42}</div><div>🧡 42%</div></div>
     `;
     document.getElementById('statsGrid').innerHTML = statsHtml;
     
-    let newbieHtml = `<table class="rating-table"><thead><tr><th>#</th><th>Участник</th><th>Консультант</th><th>Tab Team</th><th>Скидка</th><th>⭐ Звёзды</th></tr></thead><tbody>`;
-    newbies.forEach((p,i) => { newbieHtml += `<tr><td>${i+1}<td>${escapeHtml(p.name)}<td>${escapeHtml(p.consultant)}<td>${escapeHtml(p.tabTeam)}<td>${p.discount||'—'}%<td><b>${p.stars}</b>`; });
-    newbieHtml += `</tbody>月饼`;
+    let newbieHtml = `<table class="rating-table"><thead><tr><th>#</th><th>Участник</th><th>Консультант</th><th>Tab Team</th><th>⭐</th></tr></thead><tbody>`;
+    newbies.forEach((p,i) => { newbieHtml += `<tr><td>${i+1}<td>${escapeHtml(p.name)}<td>${escapeHtml(p.consultant)}<td>${escapeHtml(p.tabTeam)}<td><b>${p.stars}</b></tr>`; });
+    newbieHtml += `</tbody>点心`;
     if (!newbies.length) newbieHtml = '<div style="text-align:center; color:#999;">Нет отчётов новичков</div>';
     document.getElementById('newbieTable').innerHTML = newbieHtml;
     
-    let proHtml = `<table class="rating-table"><thead><tr><th>#</th><th>Участник</th><th>Консультант</th><th>Tab Team</th><th>⭐ Звёзды</th></tr></thead><tbody>`;
-    pros.forEach((p,i) => { proHtml += `<tr><td>${i+1}<td>${escapeHtml(p.name)}<td>${escapeHtml(p.consultant)}<td>${escapeHtml(p.tabTeam)}<td><b>${p.stars}</b>`; });
-    proHtml += `</tbody>月饼`;
+    let proHtml = `<table class="rating-table"><thead><tr><th>#</th><th>Участник</th><th>Консультант</th><th>Tab Team</th><th>⭐</th></tr></thead><tbody>`;
+    pros.forEach((p,i) => { proHtml += `<tr><td>${i+1}<td>${escapeHtml(p.name)}<td>${escapeHtml(p.consultant)}<td>${escapeHtml(p.tabTeam)}<td><b>${p.stars}</b></tr>`; });
+    proHtml += `</tbody>点心`;
     if (!pros.length) proHtml = '<div style="text-align:center; color:#999;">Нет отчётов опытных</div>';
     document.getElementById('proTable').innerHTML = proHtml;
   }
 
   function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
 
-  function clearData() { if (confirm('Удалить все загруженные отчёты?')) { participants = []; saveData(); renderAll(); addLog('🗑 Все данные очищены'); } }
+  function clearData() { if (confirm('Удалить все данные?')) { participants = []; saveData(); renderAll(); addLog('🗑 Очищено'); } }
 
-  function exportToCSV() {
+  function exportCSV() {
     const newbies = participants.filter(p => p.role === 'Новичок').sort((a,b) => b.stars - a.stars);
     const pros = participants.filter(p => p.role === 'Опытный').sort((a,b) => b.stars - a.stars);
-    
-    let rows = [];
-    rows.push(['"ОБЩИЙ РЕЙТИНГ МАРАФОНА"','']);
-    rows.push(['"Дата выгрузки"',`"${new Date().toLocaleString()}"`]);
-    rows.push([]);
-    rows.push(['"🍃 НОВИЧКИ"','','','','']);
-    rows.push(['"Место"','"Участник"','"Консультант"','"Tab Team"','"⭐ Звёзды"']);
-    newbies.forEach((p,i) => { rows.push([i+1, p.name, p.consultant, p.tabTeam, p.stars]); });
+    let rows = [
+      ['"ОБЩИЙ РЕЙТИНГ МАРАФОНА"',''],
+      ['"Дата выгрузки"',`"${new Date().toLocaleString()}"`],[],
+      ['"🍃 НОВИЧКИ"','','','',''],
+      ['"Место"','"Участник"','"Консультант"','"Tab Team"','"⭐ Звёзды"']
+    ];
+    newbies.forEach((p,i) => rows.push([i+1, p.name, p.consultant, p.tabTeam, p.stars]));
     if (!newbies.length) rows.push(['"Нет данных"','','','','']);
-    rows.push([]);
-    rows.push(['"🔥 ОПЫТНЫЕ"','','','','']);
-    rows.push(['"Место"','"Участник"','"Консультант"','"Tab Team"','"⭐ Звёзды"']);
-    pros.forEach((p,i) => { rows.push([i+1, p.name, p.consultant, p.tabTeam, p.stars]); });
+    rows.push([],['"🔥 ОПЫТНЫЕ"','','','',''],['"Место"','"Участник"','"Консультант"','"Tab Team"','"⭐ Звёзды"']);
+    pros.forEach((p,i) => rows.push([i+1, p.name, p.consultant, p.tabTeam, p.stars]));
     if (!pros.length) rows.push(['"Нет данных"','','','','']);
-    rows.push([]);
-    rows.push(['"📊 ИТОГОВАЯ СТАТИСТИКА"','']);
-    rows.push(['"Всего участников"', participants.length]);
+    rows.push([],['"📊 СТАТИСТИКА"',''],['"Всего участников"', participants.length]);
     rows.push(['"Всего звёзд (новички)"', newbies.reduce((s,p)=>s+p.stars,0)]);
     rows.push(['"Всего звёзд (опытные)"', pros.reduce((s,p)=>s+p.stars,0)]);
-    rows.push(['"Общий рейтинг (сумма всех звёзд)"', newbies.reduce((s,p)=>s+p.stars,0) + pros.reduce((s,p)=>s+p.stars,0)]);
-    
-    const csv = rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';')).join('\n');
+    const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';')).join('\n');
     const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv;charset=utf-8;'});
     const link = document.createElement('a');
     link.download = `rating_${new Date().toISOString().slice(0,10)}.csv`;
     link.href = URL.createObjectURL(blob);
     link.click();
-    URL.revokeObjectURL(link.href);
-    addLog('📎 Рейтинг выгружен в CSV (Excel)');
+    addLog('📎 Выгружено в CSV');
   }
 
   document.getElementById('uploadArea').addEventListener('click', () => document.getElementById('fileInput').click());
@@ -314,7 +319,7 @@
   document.getElementById('uploadArea').addEventListener('drop', async e => { e.preventDefault(); document.getElementById('uploadArea').style.borderColor = '#FF769A'; await processFiles(Array.from(e.dataTransfer.files)); });
   document.getElementById('fileInput').addEventListener('change', async e => { await processFiles(Array.from(e.target.files)); e.target.value = ''; });
   document.getElementById('clearBtn').addEventListener('click', clearData);
-  document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+  document.getElementById('exportBtn').addEventListener('click', exportCSV);
   loadData();
 </script>
 </body>
