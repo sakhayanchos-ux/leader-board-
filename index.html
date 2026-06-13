@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Лидер · рейтинг марафона</title>
+  <link rel="icon" type="image/jpeg" href="ikonka_leader.jpg">
+  <link rel="apple-touch-icon" href="ikonka_leader.jpg">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Рейтинг марафона">
+  <meta name="theme-color" content="#FF769A">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #F5F7FA;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      padding: 20px 12px 40px;
+      color: #1E2A2E;
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 800;
+      text-align: center;
+      color: #4D675C;
+      letter-spacing: -0.3px;
+      margin-bottom: 4px;
+    }
+    .subhead {
+      text-align: center;
+      color: #6B7F74;
+      background: white;
+      display: inline-block;
+      width: auto;
+      margin: 0 auto 20px;
+      padding: 6px 18px;
+      border-radius: 60px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    .card {
+      background: white;
+      border-radius: 28px;
+      padding: 18px 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      border: 1px solid #EDF0F2;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: #FF769A;
+      margin-bottom: 14px;
+      border-left: 4px solid #FF769A;
+      padding-left: 12px;
+    }
+    .upload-area {
+      border: 2px dashed #FF769A;
+      border-radius: 24px;
+      padding: 30px;
+      text-align: center;
+      background: #FFF9FA;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+    .stats-row {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: linear-gradient(135deg, #FF769A, #FF98B5);
+      color: white;
+      border-radius: 24px;
+      padding: 16px;
+      flex: 1;
+      min-width: 120px;
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 800;
+    }
+    .rating-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .rating-table th, .rating-table td {
+      padding: 12px 8px;
+      text-align: left;
+      border-bottom: 1px solid #EDF0F2;
+    }
+    .rating-table th {
+      color: #FF769A;
+      font-weight: 600;
+    }
+    .rank-1 { background: #FFF9E0; font-weight: bold; }
+    .rank-2 { background: #F5F5F5; }
+    .rank-3 { background: #F0F0F0; }
+    .btn {
+      background: #FF769A;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 40px;
+      font-weight: 600;
+      color: white;
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #FF769A;
+      color: #FF769A;
+    }
+    .flex-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
+    footer {
+      text-align: center;
+      font-size: 0.65rem;
+      color: #9CA7A1;
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>🏆 РЕЙТИНГ МАРАФОНА</h1>
+  <div class="subhead">Загрузка отчётов участников → автоматический рейтинг</div>
+
+  <!-- Загрузка файлов -->
+  <div class="card">
+    <div class="card-title">📤 ЗАГРУЗИТЬ ОТЧЁТЫ УЧАСТНИКОВ</div>
+    <div class="upload-area" id="uploadArea">
+      📂 Нажми или перетащи CSV/Excel файлы сюда<br>
+      <small>(отчёты, которые участники скачали из трекера)</small>
+    </div>
+    <input type="file" id="fileInput" multiple accept=".csv,.xlsx,.xls" style="display:none">
+    <div class="flex-buttons">
+      <button class="btn" id="clearDataBtn">🗑 Очистить все данные</button>
+      <button class="btn btn-outline" id="exportRatingBtn">📎 Выгрузить общий рейтинг (Excel)</button>
+    </div>
+  </div>
+
+  <!-- Общая статистика -->
+  <div class="stats-row" id="statsContainer">
+    <div class="stat-card"><div class="stat-number" id="totalParticipants">0</div><div>👥 Участников</div></div>
+    <div class="stat-card"><div class="stat-number" id="totalNewbieStars">0</div><div>🍃 Новички ⭐</div></div>
+    <div class="stat-card"><div class="stat-number" id="totalProStars">0</div><div>🔥 Опытные ⭐</div></div>
+  </div>
+
+  <!-- Рейтинги -->
+  <div class="card">
+    <div class="card-title">🍃 НОВИЧКИ</div>
+    <div id="newbieRating">Загрузите отчёты для отображения рейтинга</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔥 ОПЫТНЫЕ</div>
+    <div id="proRating">Загрузите отчёты для отображения рейтинга</div>
+  </div>
+
+  <footer>⚡ Данные хранятся в браузере. При загрузке новых файлов рейтинг обновляется автоматически.</footer>
+</div>
+
+<script>
+  // Ключ хранения данных
+  const STORAGE_KEY = "leader_rating_FINAL";
+  
+  // Структура: { participants: [{ name, status, role, stars, date, fileData }] }
+  let participants = [];
+
+  // Загрузка данных из localStorage
+  function loadData() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        participants = JSON.parse(saved);
+      } catch(e) { participants = []; }
+    }
+    renderRating();
+  }
+
+  function saveData() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(participants));
+  }
+
+  // Парсинг CSV файла (формат из трекера участника)
+  function parseCSV(text, fileName) {
+    const lines = text.split(/\r?\n/);
+    let participant = {
+      name: "",
+      status: "",
+      discount: "",
+      consultant: "",
+      tabTeam: "",
+      role: "",
+      stars: 0,
+      fileName: fileName
+    };
+    
+    // Ищем данные участника
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.includes('ФИО') || line.includes('"ФИО"')) {
+        const parts = line.split(';');
+        if (parts[1]) participant.name = parts[1].replace(/"/g, '').trim();
+      }
+      if (line.includes('Статус') && !line.includes('Статус (НП')) {
+        const parts = line.split(';');
+        if (parts[1]) participant.status = parts[1].replace(/"/g, '').trim();
+      }
+      if (line.includes('Роль') && !line.includes('Роль в марафоне')) {
+        const parts = line.split(';');
+        if (parts[1]) participant.role = parts[1].replace(/"/g, '').trim();
+      }
+      if (line.includes('Консультант') && !line.includes('Консультанта')) {
+        const parts = line.split(';');
+        if (parts[1]) participant.consultant = parts[1].replace(/"/g, '').trim();
+      }
+      if (line.includes('Вышестоящий Tab Team')) {
+        const parts = line.split(';');
+        if (parts[1]) participant.tabTeam = parts[1].replace(/"/g, '').trim();
+      }
+      if (line.includes('ИТОГО ЗВЁЗД') || (line.includes('ВСЕГО ЗВЁЗД') && line.includes(';'))) {
+        const parts = line.split(';');
+        for(let j = 0; j < parts.length; j++) {
+          if(parts[j].includes('ИТОГО ЗВЁЗД') || parts[j].includes('ВСЕГО ЗВЁЗД')) {
+            if(parts[j+1]) participant.stars = parseInt(parts[j+1]) || 0;
+            break;
+          }
+        }
+      }
+    }
+    
+    // Если не нашли звёзды, ищем последнюю строку
+    if (participant.stars === 0) {
+      for (let i = lines.length - 1; i >= 0; i--) {
+        const line = lines[i];
+        if (line.includes(';') && !line.includes('ДАННЫЕ') && !line.includes('Задание')) {
+          const parts = line.split(';');
+          const lastVal = parts[parts.length - 1];
+          if (!isNaN(parseFloat(lastVal)) && parseFloat(lastVal) > 0) {
+            participant.stars = parseFloat(lastVal);
+            break;
+          }
+        }
+      }
+    }
+    
+    if (participant.name && participant.stars > 0) {
+      return participant;
+    }
+    return null;
+  }
+
+  // Обработка загруженных файлов
+  async function processFiles(files) {
+    for (const file of files) {
+      if (file.name.endsWith('.csv') || file.type === 'text/csv') {
+        const text = await file.text();
+        const participant = parseCSV(text, file.name);
+        if (participant && participant.name) {
+          // Проверяем, нет ли уже такого участника (по имени + консультанту)
+          const existingIndex = participants.findIndex(p => p.name === participant.name && p.consultant === participant.consultant);
+          if (existingIndex !== -1) {
+            participants[existingIndex] = participant;
+          } else {
+            participants.push(participant);
+          }
+        }
+      }
+    }
+    saveData();
+    renderRating();
+  }
+
+  // Рендер рейтинга
+  function renderRating() {
+    const newbieList = participants.filter(p => p.role === 'Новичок' || p.role === 'newbie');
+    const proList = participants.filter(p => p.role === 'Опытный' || p.role === 'pro');
+    
+    // Сортировка по звёздам (по убыванию)
+    newbieList.sort((a, b) => b.stars - a.stars);
+    proList.sort((a, b) => b.stars - a.stars);
+    
+    // Общая статистика
+    document.getElementById('totalParticipants').innerText = participants.length;
+    document.getElementById('totalNewbieStars').innerText = newbieList.reduce((sum, p) => sum + p.stars, 0);
+    document.getElementById('totalProStars').innerText = proList.reduce((sum, p) => sum + p.stars, 0);
+    
+    // Таблица новичков
+    let newbieHtml = `<table class="rating-table"><thead><tr><th>#</th><th>Участник</th><th>Консультант</th><th>Tab Team</th><th>⭐ Звёзды</th></tr></thead><tbody>`;
+    newbieList.forEach((p, idx) => {
+      let rankClass = '';
+      if (idx === 0) rankClass = 'rank-1';
+      else if (idx === 1) rankClass = 'rank-2';
+      else if (idx === 2) rankClass = 'rank-3';
+      newbieHtml += `<tr class="${rankClass}"><td>${idx + 1}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.consultant)}</td><td>${escapeHtml(p.tabTeam)}</td><td><strong>${p.stars}</strong></td></tr>`;
+    });
+    newbieHtml += `</tbody></table>`;
+    if (newbieList.length === 0) newbieHtml = '<div style="text-align:center; color:#999;">Нет загруженных отчётов новичков</div>';
+    document.getElementById('newbieRating').innerHTML = newbieHtml;
+    
+    // Таблица опытных
+    let proHtml = `<table class="rating-table"><thead><tr><th>#</th><th>Участник</th><th>Консультант</th><th>Tab Team</th><th>⭐ Звёзды</th></tr></thead><tbody>`;
+    proList.forEach((p, idx) => {
+      let rankClass = '';
+      if (idx === 0) rankClass = 'rank-1';
+      else if (idx === 1) rankClass = 'rank-2';
+      else if (idx === 2) rankClass = 'rank-3';
+      proHtml += `<tr class="${rankClass}"><td>${idx + 1}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.consultant)}</td><td>${escapeHtml(p.tabTeam)}</td><td><strong>${p.stars}</strong></td></tr>`;
+    });
+    proHtml += `</tbody></table>`;
+    if (proList.length === 0) proHtml = '<div style="text-align:center; color:#999;">Нет загруженных отчётов опытных участников</div>';
+    document.getElementById('proRating').innerHTML = proHtml;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  // Очистка данных
+  function clearData() {
+    if (confirm('Удалить все загруженные отчёты? Рейтинг обнулится.')) {
+      participants = [];
+      saveData();
+      renderRating();
+    }
+  }
+
+  // Экспорт общего рейтинга в Excel
+  function exportRating() {
+    const newbieList = participants.filter(p => p.role === 'Новичок' || p.role === 'newbie');
+    const proList = participants.filter(p => p.role === 'Опытный' || p.role === 'pro');
+    newbieList.sort((a, b) => b.stars - a.stars);
+    proList.sort((a, b) => b.stars - a.stars);
+    
+    let rows = [];
+    rows.push(['ОБЩИЙ РЕЙТИНГ МАРАФОНА', '']);
+    rows.push(['Дата выгрузки', new Date().toLocaleString()]);
+    rows.push([]);
+    rows.push(['🍃 НОВИЧКИ']);
+    rows.push(['Место', 'Участник', 'Консультант', 'Tab Team', '⭐ Звёзды']);
+    newbieList.forEach((p, idx) => {
+      rows.push([idx + 1, p.name, p.consultant, p.tabTeam, p.stars]);
+    });
+    rows.push([]);
+    rows.push(['🔥 ОПЫТНЫЕ']);
+    rows.push(['Место', 'Участник', 'Консультант', 'Tab Team', '⭐ Звёзды']);
+    proList.forEach((p, idx) => {
+      rows.push([idx + 1, p.name, p.consultant, p.tabTeam, p.stars]);
+    });
+    rows.push([]);
+    rows.push(['ИТОГО УЧАСТНИКОВ', participants.length]);
+    rows.push(['ВСЕГО ЗВЁЗД НОВИЧКИ', newbieList.reduce((s, p) => s + p.stars, 0)]);
+    rows.push(['ВСЕГО ЗВЁЗД ОПЫТНЫЕ', proList.reduce((s, p) => s + p.stars, 0)]);
+    
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n');
+    const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv;charset=utf-8;'});
+    const link = document.createElement('a');
+    link.download = `rating_${new Date().toISOString().slice(0,10)}.csv`;
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
+  // UI события
+  const uploadArea = document.getElementById('uploadArea');
+  const fileInput = document.getElementById('fileInput');
+  
+  uploadArea.addEventListener('click', () => fileInput.click());
+  uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.style.borderColor = '#4D675C';
+  });
+  uploadArea.addEventListener('dragleave', () => {
+    uploadArea.style.borderColor = '#FF769A';
+  });
+  uploadArea.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    uploadArea.style.borderColor = '#FF769A';
+    const files = Array.from(e.dataTransfer.files);
+    await processFiles(files);
+  });
+  
+  fileInput.addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files);
+    await processFiles(files);
+    fileInput.value = '';
+  });
+  
+  document.getElementById('clearDataBtn').addEventListener('click', clearData);
+  document.getElementById('exportRatingBtn').addEventListener('click', exportRating);
+  
+  loadData();
+</script>
+</body>
+</html>
