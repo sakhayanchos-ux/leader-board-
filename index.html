@@ -150,12 +150,12 @@
   <div class="stats-grid" id="statsGrid"></div>
 
   <div class="card">
-    <div class="card-title">🍃 НОВИЧКИ (НП и новые супервайзеры)</div>
+    <div class="card-title">🍃 НОВИЧКИ (НП и новые супервайзоры)</div>
     <div id="newbieTable">Нет данных</div>
   </div>
 
   <div class="card">
-    <div class="card-title">🔥 ОПЫТНЫЕ (старые супервайзеры / WT)</div>
+    <div class="card-title">🔥 ОПЫТНЫЕ (старые супервайзоры / WT)</div>
     <div id="proTable">Нет данных</div>
   </div>
 
@@ -204,7 +204,7 @@
 
   function getParticipantStatus(p) {
     if (p.role === 'Новичок') {
-      if (p.status && (p.status.toLowerCase().includes('супер'))) return 'новый супервайзер';
+      if (p.status && (p.status.toLowerCase().includes('супер'))) return 'новый супервайзор';
       if (p.discount === 25) return '25%';
       if (p.discount === 35) return '35%';
       if (p.discount === 42) return '42%';
@@ -317,7 +317,7 @@
     newbies.forEach((p,i) => { 
       newbieHtml += `<tr><td style="width:40px;">${i+1}</td><td style="word-break:break-word;">${escapeHtml(p.name)}</td><td style="word-break:break-word;">${escapeHtml(p.consultant)}</td><td style="word-break:break-word;">${escapeHtml(getParticipantStatus(p))}</td><td style="word-break:break-word;">${escapeHtml(p.tabTeam)}</td><td style="text-align:center;"><b>${p.stars}</b></td>`;
     });
-    newbieHtml += `</tbody>`;
+    newbieHtml += `</tbody>点心`;
     if (!newbies.length) newbieHtml = '<div style="text-align:center; color:#999;">Нет отчётов новичков</div>';
     document.getElementById('newbieTable').innerHTML = newbieHtml;
     
@@ -326,7 +326,7 @@
     pros.forEach((p,i) => { 
       proHtml += `<tr><td style="width:40px;">${i+1}</td><td style="word-break:break-word;">${escapeHtml(p.name)}</td><td style="word-break:break-word;">${escapeHtml(p.consultant)}</td><td style="word-break:break-word;">${escapeHtml(getParticipantStatus(p))}</td><td style="word-break:break-word;">${escapeHtml(p.tabTeam)}</td><td style="text-align:center;"><b>${p.stars}</b></td>`;
     });
-    proHtml += `</tbody>`;
+    proHtml += `</tbody>点心`;
     if (!pros.length) proHtml = '<div style="text-align:center; color:#999;">Нет отчётов опытных</div>';
     document.getElementById('proTable').innerHTML = proHtml;
   }
@@ -350,18 +350,21 @@
       ["ОБЩИЙ РЕЙТИНГ МАРАФОНА"],
       ["Дата выгрузки:", new Date().toLocaleString()],
       [],
-      ["🍃 НОВИЧКИ (НП и новые супервайзоры)"]
+      [{ t: 's', v: "🍃 НОВИЧКИ (НП и новые супервайзоры)", s: { alignment: { horizontal: "center" } } }],
       ["№", "Участник", "Консультант", "Статус / Скидка", "Tab Team", "⭐ Звёзды"]
     ];
+    // Преобразуем заголовок в объединённую ячейку (SheetJS)
+    data = data.map(row => row);
+    // Добавляем строки новичков
     newbies.forEach((p,i) => { data.push([i+1, p.name, p.consultant, getParticipantStatus(p), p.tabTeam, p.stars]); });
     if (newbies.length === 0) data.push(["Нет данных"]);
     data.push([]);
-    data.push(["🔥 ОПЫТНЫЕ (старые супервайзоры / WT)"]);
+    data.push([{ t: 's', v: "🔥 ОПЫТНЫЕ (старые супервайзоры / WT)", s: { alignment: { horizontal: "center" } } }]);
     data.push(["№", "Участник", "Консультант", "Статус", "Tab Team", "⭐ Звёзды"]);
     pros.forEach((p,i) => { data.push([i+1, p.name, p.consultant, getParticipantStatus(p), p.tabTeam, p.stars]); });
     if (pros.length === 0) data.push(["Нет данных"]);
     data.push([]);
-    data.push(["📊 РАЗВЁРНУТАЯ СТАТИСТИКА"]);
+    data.push([{ t: 's', v: "📊 РАЗВЁРНУТАЯ СТАТИСТИКА", s: { alignment: { horizontal: "center" } } }]);
     data.push(["Показатель", "Значение"]);
     data.push(["Всего участников:", participants.length]);
     data.push(["Всего звёзд (новички):", newbies.reduce((s,p)=>s+p.stars,0)]);
@@ -374,7 +377,20 @@
     data.push(["Скидка 42% (новички):", discount42]);
     
     const ws = XLSX.utils.aoa_to_sheet(data);
-    ws['!cols'] = [{wch:8},{wch:32},{wch:22},{wch:20},{wch:20},{wch:10}];
+    // Объединяем ячейки для заголовков блоков
+    if (newbies.length > 0 || newbies.length === 0) {
+      // для новичков
+      const newbieStartRow = 3;
+      ws['!merges'] = ws['!merges'] || [];
+      ws['!merges'].push({ s: { r: 3, c: 0 }, e: { r: 3, c: 5 } });
+      // для опытных
+      const proStartRow = 4 + newbies.length + (newbies.length === 0 ? 0 : 1) + 1;
+      ws['!merges'].push({ s: { r: proStartRow, c: 0 }, e: { r: proStartRow, c: 5 } });
+      // для статистики
+      const statStartRow = proStartRow + pros.length + (pros.length === 0 ? 0 : 1) + 1;
+      ws['!merges'].push({ s: { r: statStartRow, c: 0 }, e: { r: statStartRow, c: 1 } });
+    }
+    ws['!cols'] = [{wch:8},{wch:38},{wch:22},{wch:20},{wch:20},{wch:10}];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Рейтинг");
     XLSX.writeFile(wb, `rating_${new Date().toISOString().slice(0,10)}.xlsx`);
