@@ -319,9 +319,9 @@
     if (!newbies.length) newbieHtml = '<div style="text-align:center; color:#999;">Нет отчётов новичков</div>';
     document.getElementById('newbieTable').innerHTML = newbieHtml;
     
-    let proHtml = `<table class="rating-table"><thead><tr><th>#</th><th>Участник</th><th>Консультант</th><th>Статус</th><th>Tab Team</th><th>⭐</th></tr></thead><tbody>`;
+    let proHtml = `<table class="rating-table"><thead><tr><th>#</th><th>Участник</th><th>Консультант</th><th>Статус</th><th>Tab Team</th><th>⭐</th><tr></thead><tbody>`;
     pros.forEach((p,i) => { 
-      proHtml += `<tr><td style="width:40px;">${i+1}</td><td style="word-break:break-word;">${escapeHtml(p.name)}</td><td style="word-break:break-word;">${escapeHtml(p.consultant)}<td><td style="word-break:break-word;">${escapeHtml(getParticipantStatus(p))}</td><td style="word-break:break-word;">${escapeHtml(p.tabTeam)}</td><td style="text-align:center;"><b>${p.stars}</b></td>`;
+      proHtml += `<tr><td style="width:40px;">${i+1}</td><td style="word-break:break-word;">${escapeHtml(p.name)}</td><td style="word-break:break-word;">${escapeHtml(p.consultant)}</td><td style="word-break:break-word;">${escapeHtml(getParticipantStatus(p))}</td><td style="word-break:break-word;">${escapeHtml(p.tabTeam)}</td><td style="text-align:center;"><b>${p.stars}</b></td>`;
     });
     proHtml += `</tbody>`;
     if (!pros.length) proHtml = '<div style="text-align:center; color:#999;">Нет отчётов опытных</div>';
@@ -374,18 +374,18 @@
     
     // Объединение ячеек для заголовков блоков
     if (!ws['!merges']) ws['!merges'] = [];
-    ws['!merges'].push({ s: { r: 3, c: 0 }, e: { r: 3, c: 5 } }); // заголовок новичков
+    ws['!merges'].push({ s: { r: 3, c: 0 }, e: { r: 3, c: 5 } });
     const proStartRow = 4 + newbies.length + (newbies.length === 0 ? 0 : 1) + 1;
-    ws['!merges'].push({ s: { r: proStartRow, c: 0 }, e: { r: proStartRow, c: 5 } }); // заголовок опытных
+    ws['!merges'].push({ s: { r: proStartRow, c: 0 }, e: { r: proStartRow, c: 5 } });
     const statStartRow = proStartRow + pros.length + (pros.length === 0 ? 0 : 1) + 1;
-    ws['!merges'].push({ s: { r: statStartRow, c: 0 }, e: { r: statStartRow, c: 1 } }); // заголовок статистики
+    ws['!merges'].push({ s: { r: statStartRow, c: 0 }, e: { r: statStartRow, c: 1 } });
     
-    // Ширина столбцов: ПЕРВЫЙ СТОЛБЕЦ увеличен, второй уменьшен
+    // Ширина столбцов: ПЕРВЫЙ СТОЛБЕЦ 38, остальные подогнаны
     ws['!cols'] = [
-      {wch:10},  // №
-      {wch:30},  // Участник (уменьшили)
+      {wch:38},  // № - ПЕРВЫЙ СТОЛБЕЦ УВЕЛИЧЕН
+      {wch:26},  // Участник
       {wch:22},  // Консультант
-      {wch:20},  // Статус / Скидка
+      {wch:22},  // Статус / Скидка
       {wch:20},  // Tab Team
       {wch:8}    // ⭐ Звёзды
     ];
