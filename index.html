@@ -11,7 +11,7 @@
   <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22%D0%A0%D0%B5%D0%B9%D1%82%D0%B8%D0%BD%D0%B3%20%D0%BC%D0%B0%D1%80%D0%B0%D1%84%D0%BE%D0%BD%D0%B0%22%2C%22short_name%22%3A%22%D0%A0%D0%B5%D0%B9%D1%82%D0%B8%D0%BD%D0%B3%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23F5F7FA%22%2C%22theme_color%22%3A%22%23FF769A%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22icon.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Рейтинг марафона">
+  <meta name="apple-mobile-web-app-title" content="Рейтинг ИБМ">
   <meta name="theme-color" content="#FF769A">
   
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -185,7 +185,6 @@
 
   function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(participants)); }
 
-  // Функция чтения CSV с автодетектом кодировки
   function readCSVWithEncoding(file) {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -312,21 +311,19 @@
     `;
     document.getElementById('statsGrid').innerHTML = statsHtml;
     
-    // Таблица для новичков со статусом
     let newbieHtml = `<table class="rating-table"><thead><tr><th>#</th><th>Участник</th><th>Консультант</th><th>Статус / Скидка</th><th>Tab Team</th><th>⭐</th></tr></thead><tbody>`;
     newbies.forEach((p,i) => { 
       newbieHtml += `<tr><td style="width:40px;">${i+1}</td><td style="word-break:break-word;">${escapeHtml(p.name)}</td><td style="word-break:break-word;">${escapeHtml(p.consultant)}</td><td style="word-break:break-word;">${escapeHtml(getParticipantStatus(p))}</td><td style="word-break:break-word;">${escapeHtml(p.tabTeam)}</td><td style="text-align:center;"><b>${p.stars}</b></td>`;
     });
-    newbieHtml += `</tbody>点心`;
+    newbieHtml += `</tbody>`;
     if (!newbies.length) newbieHtml = '<div style="text-align:center; color:#999;">Нет отчётов новичков</div>';
     document.getElementById('newbieTable').innerHTML = newbieHtml;
     
-    // Таблица для опытных со статусом
     let proHtml = `<table class="rating-table"><thead><tr><th>#</th><th>Участник</th><th>Консультант</th><th>Статус</th><th>Tab Team</th><th>⭐</th></tr></thead><tbody>`;
     pros.forEach((p,i) => { 
-      proHtml += `<tr><td style="width:40px;">${i+1}</td><td style="word-break:break-word;">${escapeHtml(p.name)}</td><td style="word-break:break-word;">${escapeHtml(p.consultant)}</td><td style="word-break:break-word;">${escapeHtml(getParticipantStatus(p))}</td><td style="word-break:break-word;">${escapeHtml(p.tabTeam)}</td><td style="text-align:center;"><b>${p.stars}</b></td>`;
+      proHtml += `<tr><td style="width:40px;">${i+1}</td><td style="word-break:break-word;">${escapeHtml(p.name)}</td><td style="word-break:break-word;">${escapeHtml(p.consultant)}<td><td style="word-break:break-word;">${escapeHtml(getParticipantStatus(p))}</td><td style="word-break:break-word;">${escapeHtml(p.tabTeam)}</td><td style="text-align:center;"><b>${p.stars}</b></td>`;
     });
-    proHtml += `</tbody>点心`;
+    proHtml += `</tbody>`;
     if (!pros.length) proHtml = '<div style="text-align:center; color:#999;">Нет отчётов опытных</div>';
     document.getElementById('proTable').innerHTML = proHtml;
   }
@@ -353,9 +350,6 @@
       [{ t: 's', v: "🍃 НОВИЧКИ (НП и новые супервайзоры)", s: { alignment: { horizontal: "center" } } }],
       ["№", "Участник", "Консультант", "Статус / Скидка", "Tab Team", "⭐ Звёзды"]
     ];
-    // Преобразуем заголовок в объединённую ячейку (SheetJS)
-    data = data.map(row => row);
-    // Добавляем строки новичков
     newbies.forEach((p,i) => { data.push([i+1, p.name, p.consultant, getParticipantStatus(p), p.tabTeam, p.stars]); });
     if (newbies.length === 0) data.push(["Нет данных"]);
     data.push([]);
@@ -377,20 +371,24 @@
     data.push(["Скидка 42% (новички):", discount42]);
     
     const ws = XLSX.utils.aoa_to_sheet(data);
-    // Объединяем ячейки для заголовков блоков
-    if (newbies.length > 0 || newbies.length === 0) {
-      // для новичков
-      const newbieStartRow = 3;
-      ws['!merges'] = ws['!merges'] || [];
-      ws['!merges'].push({ s: { r: 3, c: 0 }, e: { r: 3, c: 5 } });
-      // для опытных
-      const proStartRow = 4 + newbies.length + (newbies.length === 0 ? 0 : 1) + 1;
-      ws['!merges'].push({ s: { r: proStartRow, c: 0 }, e: { r: proStartRow, c: 5 } });
-      // для статистики
-      const statStartRow = proStartRow + pros.length + (pros.length === 0 ? 0 : 1) + 1;
-      ws['!merges'].push({ s: { r: statStartRow, c: 0 }, e: { r: statStartRow, c: 1 } });
-    }
-    ws['!cols'] = [{wch:8},{wch:38},{wch:22},{wch:20},{wch:20},{wch:10}];
+    
+    // Объединение ячеек для заголовков блоков
+    if (!ws['!merges']) ws['!merges'] = [];
+    ws['!merges'].push({ s: { r: 3, c: 0 }, e: { r: 3, c: 5 } }); // заголовок новичков
+    const proStartRow = 4 + newbies.length + (newbies.length === 0 ? 0 : 1) + 1;
+    ws['!merges'].push({ s: { r: proStartRow, c: 0 }, e: { r: proStartRow, c: 5 } }); // заголовок опытных
+    const statStartRow = proStartRow + pros.length + (pros.length === 0 ? 0 : 1) + 1;
+    ws['!merges'].push({ s: { r: statStartRow, c: 0 }, e: { r: statStartRow, c: 1 } }); // заголовок статистики
+    
+    // Ширина столбцов: ПЕРВЫЙ СТОЛБЕЦ увеличен, второй уменьшен
+    ws['!cols'] = [
+      {wch:10},  // №
+      {wch:30},  // Участник (уменьшили)
+      {wch:22},  // Консультант
+      {wch:20},  // Статус / Скидка
+      {wch:20},  // Tab Team
+      {wch:8}    // ⭐ Звёзды
+    ];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Рейтинг");
     XLSX.writeFile(wb, `rating_${new Date().toISOString().slice(0,10)}.xlsx`);
